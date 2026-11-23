@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#183e3c">
+  <title>Pip’s Dinosaur Island · 3D adventure</title>
+  <link rel="stylesheet" href="island.css">
+  <script src="vendor/three.min.js" defer></script>
+  <script src="recitation.js" defer></script>
+  <script src="island-activities.js" defer></script>
+  <script src="island.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><a href="island.html" class="brand"><span>✦</span> LITTLE EXPLORER <small>3D PLAY ADVENTURE</small></a><div><button id="open-recitation">☷ <span>Qur’an audio</span></button><button id="notes-button" aria-label="Open grown-up notes">Grown-ups</button></div></header>
+  <main id="game" aria-label="Pip’s Dinosaur Island">
+    <canvas id="island" tabindex="0" aria-label="3D dinosaur island. Use arrow keys or W A S D to walk, Space to hop, and E to explore. Or tap the ground to walk there."></canvas>
+    <div class="scene-shade" aria-hidden="true"></div>
+    <section id="hud" hidden aria-label="Explorer tools">
+      <div class="toolbar"><button id="map-button" class="tool" aria-label="Open island map">▦ <small>MAP</small></button><button id="journal-button" class="tool" aria-label="Open discovery journal">▤ <small>FINDS</small></button><div class="counts" aria-live="polite"><span title="Dinosaur friends">🦕 <b id="dino-count">0/3</b></span><span title="Eggs found">🥚 <b id="egg-count">0/3</b></span><span title="Fossils found">🦴 <b id="fossil-count">0/3</b></span></div><button id="hud-recitation" class="tool" aria-label="Open background Qur’an recitation controls">☷</button><button id="pause-button" class="tool" aria-label="Pause adventure">Ⅱ</button></div>
+      <div class="trail"><span>YOUR LITTLE EXPEDITION</span><strong id="mission">An island full of surprises.</strong><div><i id="trail-fill"></i></div></div>
+      <div class="play-tools"><span class="leaf-basket" aria-label="Leaves in basket">🌿 <b id="leaf-count">0</b></span><button id="course-button" aria-pressed="false">◎ Hop trail</button><button id="buddy-button" hidden aria-pressed="false">🐣 Walk together</button></div>
+    </section>
+    <section id="pip" hidden><button id="help-button" aria-label="Pip, help me find a discovery"><span aria-hidden="true">🦕</span><small>HELP ME</small></button><p id="message" role="status">Salaam, explorer!</p><button id="repeat-button" aria-label="Repeat Pip’s guidance">◖))</button></section>
+    <div id="navigation" hidden><span id="navigation-label">Following Pip…</span><button id="cancel-walk" aria-label="Stop following the trail">×</button></div>
+    <div id="nearby" hidden></div>
+    <section id="controls" hidden aria-label="Movement controls">
+      <div id="joystick" aria-label="Hold and slide to walk" role="group"><div class="joy-ring"><span>↑</span><span>← &nbsp; →</span><span>↓</span></div><div id="stick"></div></div>
+      <div class="keyboard-note">WASD / ARROWS · WALK<br>SPACE · HOP &nbsp; E · EXPLORE</div>
+      <div class="actions"><button id="hop-button" aria-label="Hop">↑<small>HOP</small></button><button id="action-button" aria-label="Explore nearby"><span id="action-icon">✋</span><small id="action-label">EXPLORE</small></button></div>
+    </section>
+    <div id="overlay"></div>
+    <div id="celebrate" role="status" hidden></div>
+    <div id="fallback" hidden><span>🦕</span><h1>This island needs 3D support.</h1><p>Try a recent Safari or Chrome browser with WebGL enabled. Your discoveries are safe.</p><a href="play.html">Play the illustrated adventure instead →</a></div>
+    <dialog id="recitation-dialog" aria-labelledby="recitation-title"><button class="close" id="close-recitation" aria-label="Close recitation controls">×</button><span class="eyebrow">OPTIONAL · RECORDED RECITATION</span><h2 id="recitation-title">Juz Amma</h2><p>Muzammil Hasballah · community-attributed recording</p><div class="button-row"><button id="recitation-toggle" class="primary" aria-pressed="false">▶ Start recitation</button><button id="recitation-stop">Stop & rewind</button></div><p id="recitation-status" role="status">Tap Start to stream. Internet needed.</p><label class="setting">Volume <input id="recitation-volume" type="range" min="0" max="1" step="0.05" value="0.35"><output id="volume-value">35%</output></label><label class="setting"><input id="recitation-loop" type="checkbox" checked> Repeat Juz Amma</label><p class="fine">Pauses for Pip’s voice, lessons, breaks, and hidden tabs. About 81 minutes / 117 MB; Wi-Fi recommended. <a href="https://archive.org/details/MuzammilHasballahJuzAmma" target="_blank" rel="noopener noreferrer">Community upload and attribution ↗</a>. Not independently authenticated as an official release. No audio is copied into the game.</p></dialog>
+    <dialog id="notes" aria-labelledby="notes-title">
+      <button class="close" id="close-notes" aria-label="Close grown-up notes">×</button><span class="eyebrow">A SMALL ISLAND. A BIG IMAGINATION.</span><h2 id="notes-title">For your grown-up</h2>
+      <p>An active 3D adventure for ages 5–6, with no enemies, countdowns, lost lives, music, ads, accounts, or purchases. The original illustrated game is still available.</p>
+      <h3>Let him lead</h3><p>Gather leaves by walking into the floating snacks above leafy bushes. Share a leaf with a roaming dinosaur to make a friend and ride. At a dig, rub the sand away with a finger or mouse; a brush button also works by keyboard. Collect eggs, bring them to the nursery, and tap the egg button four times to watch a baby hatch. The baby can follow him, or return to its nest with the baby button.</p>
+      <h3>Play, not just collect</h3><p>Tap Hop trail for a repeatable six-hoop adventure: walk or ride through the golden hoops and hop inside the high ones. There is no timer or failure penalty. Pip can lead the way, but high hoops still need a hop. The beach ball rolls when pushed; try chasing it on a dinosaur. All play is optional. Dinosaur snacks regrow; there are no timed care chores.</p>
+      <p>Tap the ground, use the joystick, or use arrow keys/WASD; E explores, Space hops. Tap Pip for help. The map can guide him to any place. The helping-hand button changes with nearby objects. Dinosaurs wait when approached, so he never has to chase one to interact.</p>
+      <h3>Quiet learning, always optional</h3><p>The quiet camp has the existing parent-guided Muhammadiyah prayer sequence and Al-Fatihah, Al-Ikhlas, Al-Falaq, and An-Nas. Learning never awards points or unlocks exploration. Please review religious material with a qualified teacher; references are in the learning guide. No depictions of Allah or prophets.</p>
+      <h3>Pretend discoveries</h3><p>Stylised dinosaurs, simplified fossils, and fantasy eggs are for play, not scientific reconstructions. The decorative pyramid is a separate museum model, not a claim that people in ancient Egypt lived with dinosaurs.</p>
+      <h3>Saved here only</h3><p>Discovered dinosaurs, eggs, fossils, displays, hatched babies, leaves, companion choice, hop-trail keepsake, explorer position, and voice preference are stored on this browser. Partial brushing, unfinished hatching, moving dinosaur locations, and ball position are not saved across refreshes. No personal information, microphones, or religious-performance records. <strong id="storage-note"></strong> Recitation is streamed only after a tap; third-party audio hosts receive ordinary network requests. English speech uses your device’s available voice.</p>
+      <p class="fine">Three.js r160.1 · <a href="vendor/THREE-LICENSE.txt">MIT licence</a>. All models are made from local procedural shapes. An internet connection is not needed for the island’s artwork or gameplay.</p>
+      <div class="button-row"><button id="voice-button" aria-pressed="true">English voice: on</button><button id="fullscreen-button">Full screen</button><button id="reset-button">Reset island discoveries</button></div><a href="play.html">Original illustrated adventure →</a>
+    </dialog>
+  </main>
+  <footer><span>NO RUSH. NO WRONG TURNS. JUST WONDER.</span><span>Made for little explorers · Play together</span></footer>
+</body>
+</html>

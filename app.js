@@ -71,7 +71,7 @@
   const listen = (label = 'Read these instructions aloud') => `<button class="listen-button" data-action="listen" aria-label="${label}">${icon('sound')}</button>`;
   function mapView() {
     return `<section class="greeting"><div><span class="eyebrow">ASSALAMU ALAIKUM, LITTLE EXPLORER</span><h1>A big world. Little discoveries.</h1><p>Dig, discover, and grow in faith. One little step at a time.</p></div><span class="small-pill">${icon('leaf')} MADE FOR LITTLE HEARTS</span></section>
-    <section class="hero"><div class="hero-copy"><span class="hero-tag">✦ NEW · A REAL PLAYABLE ADVENTURE</span><h2>Run. Jump.<br><span>Make a dino smile.</span></h2><p>Help Pip’s dinosaur friend, build a fossil display, and sail down the Nile in Dino & Desert Quest.</p><button class="button" data-action="start">Play the adventure ${icon('arrow')}</button></div>${scene('dig', true)}<span class="scene-label">Dino & Desert Quest · Now playable</span></section>
+    <section class="hero"><div class="hero-copy"><span class="hero-tag">✦ NEW · A LIVING 3D ISLAND</span><h2>Roam. Ride.<br><span>Hop into adventure.</span></h2><p>Gather snacks for roaming dinosaurs, uncover fossils, hatch a baby companion, and play the golden hoop trail.</p><button class="button" data-action="start">Play the adventure ${icon('arrow')}</button></div>${scene('dig', true)}<span class="scene-label">Pip’s Dinosaur Island · 3D play</span></section>
     <section aria-labelledby="destinations"><div class="section-heading"><div><h2 id="destinations">Where shall we go?</h2><p>Pick a little adventure. There’s no wrong way to begin.</p></div><span class="step-number">3 PLACES TO DISCOVER</span></div><div class="destination-grid">
     ${destination('dig', 'NATURE & WONDER', 'Dinosaur dig', 'Brush away the sand.<br>What will you discover?', 'Let’s dig', 'HANDS-ON DISCOVERY', 'bone')}
     ${destination('egypt', 'HISTORY & CURIOSITY', 'Egypt explorers', 'Follow the river.<br>Peek into the ancient past.', 'Explore Egypt', 'A LITTLE HISTORY', 'pyramid')}
@@ -214,7 +214,7 @@
     if (action === 'parents') return openParents();
     if (action === 'listen') return readInstructions();
     if (action === 'start') {
-      location.href = 'play.html';
+      location.href = 'island.html';
       return;
     }
     if (action === 'play') return void playAyah();
