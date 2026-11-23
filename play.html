@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172f32">
+  <meta name="description" content="Run, jump, help a dinosaur, and solve ancient Egypt puzzles. A gentle adventure for little explorers.">
+  <title>Dino & Desert Quest · Little Explorer</title>
+  <link rel="stylesheet" href="adventure.css">
+  <script src="recitation.js" defer></script>
+  <script src="adventure.js" defer></script>
+</head>
+<body>
+  <header class="game-header"><a class="game-brand" href="play.html"><span class="brand-compass" aria-hidden="true">✧</span><span>LITTLE EXPLORER<small>DINO & DESERT QUEST</small></span></a><div class="header-right"><span class="family-tag">A BIG ADVENTURE FOR LITTLE HEARTS</span><button id="open-recitation" class="header-button" aria-label="Open background Qur’an recitation controls">☷ Qur’an audio</button><button id="grownups" class="header-button" aria-label="Open grown-up notes">Grown-ups</button></div></header>
+  <main>
+    <section id="game" class="game-shell" aria-label="Dino and Desert Quest game">
+      <canvas id="world" tabindex="0" aria-label="Adventure world. Move with arrow keys or A and D. Jump with Space. Use E to interact. Touch controls are below. An alternative activity list is available in the map.">Your browser needs canvas support. <a href="index.html">Open the original learning activities instead.</a></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+      <div id="hud" class="hud" hidden>
+        <button id="map-button" class="round-button" aria-label="Open adventure map">▦</button>
+        <div class="quest-badge"><span id="world-label">DINOSAUR VALLEY</span><strong id="quest-label">Find two leaves for the big dinosaur</strong><div id="quest-progress" class="quest-progress"></div></div>
+        <div class="hud-right"><span id="amber-counter" class="amber-counter" aria-label="Amber collected">◆ <b>0</b></span><button id="hud-recitation" class="round-button" aria-label="Open background Qur’an recitation controls">☷</button><button id="voice-button" class="round-button" aria-label="Turn English voice off" aria-pressed="true">◖))</button><button id="pause-button" class="round-button" aria-label="Pause game">Ⅱ</button></div>
+      </div>
+      <div id="speech" class="speech-bubble" role="status" hidden><span class="pip-avatar" aria-hidden="true">🦕</span><div><strong>PIP, YOUR LITTLE EXPLORER PAL</strong><p id="speech-text"></p></div><button id="repeat-instruction" aria-label="Read this message aloud">◖))</button></div>
+      <div id="world-prompt" class="world-prompt" hidden></div>
+      <div id="controls" class="controls" hidden>
+        <div class="move-controls"><button class="control move" id="move-left" aria-label="Move left">◀</button><button class="control move" id="move-right" aria-label="Move right">▶</button></div>
+        <span class="keyboard-hint">← → MOVE <i>·</i> SPACE JUMP <i>·</i> E EXPLORE</span>
+        <div class="action-controls"><button class="control explore" id="interact" aria-label="Explore nearby object"><span aria-hidden="true">✋</span><small>EXPLORE</small></button><button class="control jump" id="jump" aria-label="Jump"><span aria-hidden="true">↑</span><small>JUMP!</small></button></div>
+      </div>
+      <div id="overlay" class="overlay"></div>
+      <div id="celebration-particles" aria-hidden="true"></div>
+      <dialog id="recitation-dialog" aria-labelledby="recitation-title"><button class="close-note" id="close-recitation" aria-label="Close recitation controls">×</button><span class="kicker">A LITTLE TIME WITH THE QUR’AN</span><h2 id="recitation-title">Juz Amma</h2><p class="reciter-name">Muzammil Hasballah</p><p>Recorded recitation alongside your adventure. It pauses for spoken instructions, learning time, and when the game is paused or hidden.</p><div class="recitation-actions"><button id="recitation-toggle" class="big-button green" aria-pressed="false">▶ Start recitation</button><button id="recitation-stop" class="plain-button">Stop & rewind</button></div><p id="recitation-status" class="recitation-status" role="status">Tap Start to stream the recording. Internet needed.</p><label class="recitation-setting">Volume <input id="recitation-volume" type="range" min="0" max="1" step="0.05" value="0.35"><output id="volume-value">35%</output></label><label class="recitation-setting"><input id="recitation-loop" type="checkbox" checked> Repeat Juz Amma</label><p class="recitation-credit">About 81 minutes. Streaming may use substantial mobile data; Wi-Fi is recommended. <a href="https://archive.org/details/MuzammilHasballahJuzAmma" target="_blank" rel="noopener noreferrer">Community-hosted recording & attribution ↗</a>. This upload is labelled with the reciter’s name; it is not an independently authenticated official release. The audio is not copied into this game’s repository.</p></dialog>
+    </section>
+    <div class="under-game"><span><i></i> NO LIVES TO LOSE. SO MUCH TO DISCOVER.</span><span>Play with a grown-up <b>✦</b> Take a break whenever you like.</span><button id="fullscreen-button">⛶ Full screen</button></div>
+  </main>
+  <dialog id="notes" aria-labelledby="notes-title"><button class="close-note" id="close-notes" aria-label="Close grown-up notes">×</button><span class="kicker">FOR YOUR GROWN-UP</span><h2 id="notes-title">More play. Less pressure.</h2><p>A short, forgiving adventure for an early-primary child. There are no enemies, timers, lost lives, ads, music, or purchases. Falling in water returns the explorer safely to the bank.</p><h3>Three places, always available</h3><p>The dinosaur valley and Egypt are separate, imaginary museum-inspired worlds, not the same historical period. Completing their exploration missions earns keepsake stamps. The quiet camp is always open: prayer and Qur’an practice never earn points or gate the adventure.</p><h3>Islamic learning</h3><p>Helping, gratitude, and caring for creation are woven into the story. The camp opens the existing Muhammadiyah-style prayer guide and Al-Fatihah plus the last three surahs. English computer voices read English guidance only. Qur’an uses recorded Al-Husary recitation (internet needed); prayer duas remain parent-led. Please review prayer content with your teacher. No depictions of Allah or prophets.</p><h3>Controls & accessibility</h3><p>Arrow keys or A/D to move, Space/W/↑ to jump, E/Enter to explore, Escape to pause. Hold the touch arrows; tap Jump and Explore. Tap a place in the scenery to walk there. Puzzles support selecting a piece then a slot, keyboard buttons, or dragging. In the map, “Activity list” offers direct, movement-free access.</p><h3>Saved on this browser only</h3><p>Only completed exploration stamps, outfit colour, and voice preference are saved. No name, birthday, microphone, analytics, or religious-performance data. Browser voices vary. Visuals and gameplay work offline. <span id="save-note"></span></p><button id="reset-game" class="plain-button">Reset adventure stamps</button><p id="reset-message" role="status"></p><a href="index.html">Original learning activities & religious references →</a></dialog>
+</body>
+</html>
