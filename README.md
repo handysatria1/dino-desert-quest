@@ -10,6 +10,18 @@ A gentle, active browser adventure for little explorers, designed around ages 5�
 - Walk or ride through six golden hoops, hopping through the high ones. No timer or lost lives. Replay whenever you like.
 - Push and chase a rolling beach ball. Explore with Pip, a picture map, spoken English guidance, and saved discoveries.
 
+### New: the teamwork expedition
+
+Tap **🧭 Expedition** to play a connected adventure:
+
+1. Invite a lost baby to follow, and walk it home to the nursery.
+2. Carry three timbers; ride Lulu to use her long reach for the high one.
+3. Fit six planks to build an animated bridge to a second island.
+4. Ride Toto and use his strength to roll a boulder away from a bright, open-roof cave.
+5. Follow the cave footprints, hop on the middle one, and brush away sand to reveal a giant fossil.
+
+Tap Pip’s face for the next step and a safe walking route. The map covers both islands. Mission progress saves, including a partly built bridge or partly moved boulder. Tap Expedition again to switch back to free exploration; your mission progress stays. The quiet camp is always available and never part of mission requirements.
+
 **Tablet:** slide the joystick, or tap the ground to walk. The gold action button changes when you find something. Tap **Hop trail** for the hoop activity, and Pip’s face for help.
 
 **Computer:** arrows/WASD to move, Space to hop, E to interact, Escape to pause.
@@ -24,7 +36,7 @@ Tap **Qur’an audio → Start recitation** for optional recorded Juz Amma. The 
 
 ### Privacy and compatibility
 
-No accounts, ads, purchases, microphone, analytics, combat, enemies, or religious-performance scores. Discoveries, leaves, baby companion choice, completed hop-trail keepsake, position, and English voice preference stay in this browser’s local storage. No names or birthdays are stored. Third-party audio/font hosts receive ordinary network requests.
+No accounts, ads, purchases, microphone, analytics, combat, enemies, or religious-performance scores. Discoveries, leaves, baby companion choice, completed hop-trail keepsake, expedition progress, position, and English voice preference stay in this browser’s local storage. No names or birthdays are stored. Third-party audio/font hosts receive ordinary network requests.
 
 Use a recent Safari or Chrome with WebGL. If 3D is unavailable, use the illustrated adventure. Island graphics and scripts are bundled locally; no build step or runtime CDN is needed. No guaranteed offline installation is provided. Browser speech voices vary. Dinosaurs, fossils, and hatching eggs are stylised pretend play; the decorative pyramid is a labelled museum model, not a shared dinosaur/Egypt timeline.
 

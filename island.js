@@ -133,7 +133,10 @@
     { id: 'dig', name: 'Fossil digs', icon: '⛏', x: -12, z: -8, hint: 'Rub away the sand' },
     { id: 'leaves', name: 'Leaf garden', icon: '🌿', x: -5, z: 10, hint: 'Gather dinosaur snacks' },
     { id: 'course', name: 'Hop trail', icon: '◎', x: 5, z: 6, hint: 'Walk, ride and jump' },
-    { id: 'ball', name: 'Beach ball', icon: '⚽', x: 8, z: -1, hint: 'Push it. Chase it!' }
+    { id: 'ball', name: 'Beach ball', icon: '⚽', x: 8, z: -1, hint: 'Push it. Chase it!' },
+    { id: 'expedition', name: 'Teamwork expedition', icon: '🧭', x: -17, z: 6, hint: 'A baby, a bridge and a sunlit cave' },
+    { id: 'bridge', name: 'Teamwork bridge', icon: '🌉', x: 32, z: 0, hint: 'Build a route to Fossil Island' },
+    { id: 'cave', name: 'Sunlit fossil cave', icon: '🐾', x: 51, z: 0, hint: 'Cross your repaired bridge' }
   ];
   const key = 'little-explorer-island-v1';
   let storageOK = true, stored = {};
@@ -143,18 +146,22 @@
     dinosaurs: allowed(stored.dinosaurs, dinos.map(d => d.id)), eggs: allowed(stored.eggs, eggs.map(d => d.id)),
     fossils: allowed(stored.fossils, digs.map(d => d.id)), voice: stored.voice !== false,
     displayed: [], hatched: [], leaves: Number.isInteger(stored.leaves) ? Math.max(0, Math.min(9, stored.leaves)) : 0,
-    companion: null, trailComplete: stored.trailComplete === true
+    companion: null, trailComplete: stored.trailComplete === true,
+    expedition: window.IslandMissions.clean(stored.expedition)
   };
   state.displayed = allowed(stored.displayed, state.fossils); state.hatched = allowed(stored.hatched, state.eggs);
   state.companion = state.hatched.includes(stored.companion) ? stored.companion : null;
   let mode = 'title', time = 0, last = 0, speechToken = 0, target = null, riding = null, celebrationTimer;
   let started = false, moving = false, hopHeight = 0, hopVelocity = 0, saveTime = 0, autoSaveDirty = false;
   let nearest = null, guideTarget = null, journalTab = 'dinosaurs', currentMessage = 'Salaam, explorer!', joyPointer = null;
-  let hatch = null, course = null, ballCooldown = 0;
+  let hatch = null, course = null, ballCooldown = 0, expedition = null, waypoints = [];
   const keys = new Set(), joy = new T.Vector2(), position = new T.Vector3(0, .4, 16);
-  if (Number.isFinite(stored.x) && Number.isFinite(stored.z)) { position.x = Math.max(-36, Math.min(36, stored.x)); position.z = Math.max(-28, Math.min(28, stored.z)); }
-  function bound() { const r = Math.hypot(position.x / 37.5, position.z / 29); if (r > 1) { position.x /= r; position.z /= r; return true; } return false; }
-  bound();
+  if (Number.isFinite(stored.x) && Number.isFinite(stored.z)) { position.x = stored.x; position.z = stored.z; }
+  function bound(previous) {
+    if (expedition.walkable(position)) return false;
+    if (previous) position.copy(previous); else expedition.clamp(position);
+    return true;
+  }
   function save() {
     try { localStorage.setItem(key, JSON.stringify({ ...state, x: position.x, z: position.z })); } catch { storageOK = false; }
     autoSaveDirty = false;
@@ -171,7 +178,7 @@
   }
   function say(text, aloud = true) { currentMessage = text; $('#message').textContent = text; if (aloud) speak(text); }
   function clearInput() { keys.clear(); joy.set(0, 0); joyPointer = null; $('#stick').style.transform = ''; }
-  function stopWalk() { target = null; guideTarget = null; $('#navigation').hidden = true; }
+  function stopWalk() { target = null; guideTarget = null; waypoints = []; $('#navigation').hidden = true; }
   function stopLesson() { overlay.querySelector('iframe')?.contentWindow?.postMessage('little-explorer:stop-audio', '*'); }
   function setMode(next) {
     window.Recitation?.hold('game', !['play', 'title'].includes(next));
@@ -328,12 +335,30 @@
   for (let i = 0; i < 11; i++) { const dot = disk('#fff2b2', 0, .55, 0, .16, .16); dot.visible = false; trailDots.push(dot); }
   const destinationRing = mesh(new T.TorusGeometry(1.5, .1, 4, 36), '#fff1ad', 0, .6, 0); destinationRing.rotation.x = -Math.PI / 2; destinationRing.visible = false; destinationRing.castShadow = false;
   const raycaster = new T.Raycaster(), pointer = new T.Vector2(), groundPlane = new T.Plane(new T.Vector3(0, 1, 0), -.4);
+  expedition = window.IslandMissions.create({ T, scene, group, ball, cube, cylinder, segment, disk, label, dinosaur, mat, position, state, say, save, celebrate, reduced, dinos, nextIn,
+    riding: () => riding, refresh: refreshPlayTools,
+    brush: onCollect => {
+      setMode('brush');
+      window.IslandActivities.brush({ host: overlay, dig: { id: 'ribs' }, onExit: resume, onSpeak: speak,
+        onCollect: () => { if (mode !== 'brush' || state.expedition.complete) return; resume(); onCollect(); } }); focusCard();
+    }
+  });
+  bound();
+  const expeditionButton = document.createElement('button'); expeditionButton.id = 'expedition-button'; expeditionButton.textContent = '🧭 Expedition';
+  document.querySelector('.play-tools').append(expeditionButton);
+  expeditionButton.onclick = () => {
+    if (!isPlaying()) return;
+    if (state.expedition.active) { state.expedition.active = false; refreshPlayTools(); save(); say('Free exploring! Your expedition is saved. Tap Expedition whenever you want to continue.'); }
+    else { if (course) startCourse(); expedition.start(); goTo(expedition.destination()); }
+  };
   function updateMission() {
+    if (state.expedition.active && !course) { $('#mission').textContent = expedition.objective(); $('#trail-fill').style.width = `${expedition.progress()}%`; return; }
     const total = state.dinosaurs.length + state.eggs.length + state.fossils.length + state.displayed.length + state.hatched.length;
     $('#trail-fill').style.width = `${course ? course.index / hoops.length * 100 : total / 15 * 100}%`;
     $('#mission').textContent = course ? `Hoop ${course.index + 1} of 6 · ${hoops[course.index].jump ? 'Hop through the high hoop!' : 'Through the glowing hoop!'}` : total === 15 ? 'Take a baby on the hop trail!' : state.fossils.length > state.displayed.length ? 'A fossil for your little museum!' : state.eggs.length > state.hatched.length ? 'An egg for the cosy nursery!' : state.dinosaurs.length === 0 ? 'Gather leaves. Make a dino friend.' : 'Hidden eggs. Old fossils. New friends.';
   }
   function refreshPlayTools() {
+    if (expedition) { $('#expedition-button')?.setAttribute('aria-pressed', String(state.expedition.active)); }
     $('#leaf-count').textContent = state.leaves;
     $('#buddy-button').hidden = !state.hatched.length;
     $('#buddy-button').textContent = state.companion ? '🐣 Back to nest' : '🐣 Walk together';
@@ -385,10 +410,10 @@
       if (!ridingThis && !nearby && guideTarget?.id !== d.id) {
         d.wait -= dt;
         if (d.wait <= 0) {
-          if (!d.roam) { const a = rand() * Math.PI * 2, r = 2 + rand() * 4; d.roam = d.home.clone().add(new T.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); const radius = Math.hypot(d.roam.x / 34, d.roam.z / 26); if (radius > 1) { d.roam.x /= radius; d.roam.z /= radius; } }
+          if (!d.roam) { const a = rand() * Math.PI * 2, r = 2 + rand() * 4; d.roam = d.home.clone().add(new T.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); expedition.clamp(d.roam); }
           const dx = d.roam.x - p.x, dz = d.roam.z - p.z, distance = Math.hypot(dx, dz);
           if (distance < .2) { d.roam = null; d.wait = 1.5 + rand() * 2.5; }
-          else { p.x += dx / distance * dt * 1.5; p.z += dz / distance * dt * 1.5; d.model.rotation.y = Math.atan2(dx, dz); walking = true; }
+          else { const next = p.clone(); next.x += dx / distance * dt * 1.5; next.z += dz / distance * dt * 1.5; if (expedition.walkable(next)) { p.copy(next); walking = true; } else { d.roam = null; d.wait = 2; } d.model.rotation.y = Math.atan2(dx, dz); }
         }
       } else if (!ridingThis && nearby) d.model.rotation.y = Math.atan2(position.x - p.x, position.z - p.z);
       d.model.userData.legs.forEach((leg, j) => { leg.rotation.x = walking && !reduced ? Math.sin(time * 8 + (j % 3 === 0 ? 0 : Math.PI)) * .4 : 0; });
@@ -400,8 +425,10 @@
     babies.forEach((b, i) => {
       if (!state.hatched.includes(eggs[i].id)) return;
       const follows = state.companion === eggs[i].id;
-      const targetX = follows ? pip.position.x - 1.4 : 10 + i * 3 + Math.sin(time * .6 + i) * .7;
-      const targetZ = follows ? pip.position.z + 1.3 : 15 + Math.cos(time * .6 + i) * .65;
+      const followTarget = follows ? expedition.clamp(new T.Vector3(pip.position.x - 1.4, .4, pip.position.z + 1.3)) : new T.Vector3(10 + i * 3 + Math.sin(time * .6 + i) * .7, .4, 15 + Math.cos(time * .6 + i) * .65);
+      const route = follows ? expedition.route(b.position, followTarget) : [followTarget];
+      const next = route.find(p => Math.hypot(p.x - b.position.x, p.z - b.position.z) > 1) || followTarget;
+      const targetX = next.x, targetZ = next.z;
       const dx = targetX - b.position.x, dz = targetZ - b.position.z, dist = Math.hypot(dx, dz);
       if (dist > .3) { const step = Math.min(dist, dt * (follows ? 11 : 2)); b.position.x += dx / dist * step; b.position.z += dz / dist * step; b.rotation.y = Math.atan2(dx, dz); }
       b.position.y = .42 + (!reduced && dist > .3 ? Math.abs(Math.sin(time * 11)) * .12 : 0);
@@ -470,13 +497,15 @@
     setMode('title');
     overlay.innerHTML = `<section class="title-screen"><div class="title-copy"><span class="eyebrow">A TINY ISLAND. A DINOSAUR-SIZED ADVENTURE.</span><h1>Pip’s<br>Dinosaur<em>Island.</em></h1><p>Hidden eggs. Friendly giants.<br>A little museum made by you.</p><div class="button-row"><button class="primary" data-action="start">${stored.eggs || stored.fossils || stored.dinosaurs ? 'Let’s explore again!' : 'Let’s explore!'} ▶</button><button class="quiet-button" data-action="audio">☷ Qur’an audio</button></div><div class="fine">EXPLORE · COLLECT · HATCH · DISCOVER</div></div><div class="title-sticker"><span>🦕</span>No enemies. No hurry.<br>Pip is coming with you.</div></section>`;
   }
-  function start() { started = true; setMode('play'); say('Salaam, explorer! I’m Pip. Let’s play! Gather floating leaves for our roaming dinosaurs, brush away real sand, and hop through the golden hoops.'); }
+  function start() { started = true; setMode('play'); say(state.expedition.active ? `Welcome back, explorer! ${expedition.objective().replace(/^[^A-Za-z]+/, '')}. Tap Pip to continue your expedition, or explore any way you like.` : 'Salaam, explorer! I’m Pip. Tap Expedition for a baby rescue, a bridge to build, and a sunlit fossil cave. Or roam, ride and play any way you like!'); }
   function resume() { setMode('play'); }
   function pause() {
     if (!started) return;
     save(); setMode('pause'); overlay.innerHTML = `<section class="card pause-card" role="dialog" aria-modal="true" aria-labelledby="pause-title"><span class="big-icon">☁</span><span class="eyebrow">PIP WILL WAIT RIGHT HERE</span><h2 id="pause-title">A little breather.</h2><p>Your discoveries are safe. There’s no timer to beat.</p><div class="button-row"><button class="primary green" data-action="resume">Keep exploring ▶</button><button data-action="map">Island map ▦</button><button data-action="journal">My discoveries ▤</button></div></section>`; focusCard();
   }
   function nextIn(type) {
+    if (type === 'expedition') { if (!state.expedition.active) expedition.start(); return expedition.destination(); }
+    if (type === 'cave') return state.expedition.boards === 6 ? { id: 'cave', name: 'the sunlit cave', x: state.expedition.pushes === 4 ? 60 : 51, z: 0 } : { ...places.find(p => p.id === 'bridge'), name: 'the bridge · repair it to cross' };
     if (type === 'dinosaurs') { const d = dinos.find(d => !state.dinosaurs.includes(d.id)) || dinos[0]; return { ...d, x: d.model.position.x, z: d.model.position.z }; }
     if (type === 'eggs') return eggs.find(e => !state.eggs.includes(e.id)) || places[1];
     if (type === 'dig') return digs.find(d => !state.fossils.includes(d.id)) || places[0];
@@ -488,7 +517,7 @@
     if (!destination) return;
     cancelHatch(); setMode('play');
     if (destination.id === 'course' && !course) startCourse();
-    target = new T.Vector3(destination.x, .4, destination.z); guideTarget = destination;
+    waypoints = expedition.route(position, new T.Vector3(destination.x, .4, destination.z)); target = waypoints.shift(); guideTarget = destination;
     $('#navigation').hidden = false; $('#navigation-label').textContent = `Pip’s trail · ${destination.name}`;
     destinationRing.position.set(destination.x, .6, destination.z); destinationRing.visible = true;
     say(`Let’s go to ${destination.name}. Follow the little golden dots! You can steer any time.`);
@@ -496,6 +525,7 @@
   function help() {
     if (hatch) { say('Tap the gold egg button to help your baby hatch! You can walk away any time and come back later.'); return; }
     if (course) { const h = hoops[course.index]; goTo({ id: 'hoop', name: h.jump ? 'the hopping hoop' : 'the next hoop', x: h.x, z: h.z }); return; }
+    if (state.expedition.active) { goTo(expedition.destination()); return; }
     let options = [];
     if (state.fossils.length > state.displayed.length) options.push(places[0]);
     if (state.eggs.length > state.hatched.length) options.push(places[1]);
@@ -508,14 +538,22 @@
     setMode('map');
     const svgPos = o => [150 + o.x * 3, 123 + o.z * 2.8];
     const [px, py] = svgPos(position);
-    overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="map-title">${closeMarkup()}<span class="eyebrow">FOLLOW YOUR CURIOSITY</span><h2 id="map-title">Your pocket island.</h2><p>Pick a picture. Pip will lead the way.</p><div class="map-layout"><div class="island-map"><svg viewBox="0 0 300 247" role="img" aria-label="Island map with your location, dinosaurs, museum, nursery and camp"><ellipse cx="150" cy="124" rx="139" ry="109" fill="#e9d39d"/><ellipse cx="150" cy="121" rx="129" ry="101" fill="#accb83"/><path d="M115 166Q128 141 130 125T80 81M115 166Q159 167 192 166T220 98M80 81Q100 45 147 65T220 98" fill="none" stroke="#ddd7a1" stroke-width="7" stroke-linecap="round"/>${[...dinos.map(d => ({ ...d, x: d.model.position.x, z: d.model.position.z, icon: '🦕' })), ...eggs.filter(e => !state.eggs.includes(e.id)).map(e => ({ ...e, icon: '🥚' })), ...digs.filter(d => !state.fossils.includes(d.id)).map(d => ({ ...d, icon: '🦴' })), ...places.slice(0, 3)].map(p => { const [x, y] = svgPos(p); return `<text x="${x}" y="${y}" font-size="18" text-anchor="middle" dominant-baseline="middle">${p.icon}</text>`; }).join('')}<circle cx="${px}" cy="${py}" r="6" fill="#f6ae48" stroke="#fff8d7" stroke-width="3"/></svg></div><div class="map-destinations">${places.map(p => `<button class="destination" data-action="visit" data-place="${p.id}" aria-label="Follow Pip to ${p.name}"><span>${p.icon}</span><div><strong>${p.name}</strong><small>${p.hint}</small></div></button>`).join('')}</div></div><p class="map-key">● The gold dot is you. Every place is always open.</p><div class="button-row map-settings"><button data-action="audio">☷ Qur’an audio</button><button data-action="notes">Grown-up notes</button></div></section>`; focusCard();
+    const markers = [...dinos.map(d => ({ ...d, x: d.model.position.x, z: d.model.position.z, icon: '🦕' })), ...eggs.filter(e => !state.eggs.includes(e.id)).map(e => ({ ...e, icon: '🥚' })), ...digs.filter(d => !state.fossils.includes(d.id)).map(d => ({ ...d, icon: '🦴' })), ...places.slice(0, 3), ...places.slice(-2)];
+    overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="map-title">${closeMarkup()}<span class="eyebrow">FOLLOW YOUR CURIOSITY</span><h2 id="map-title">Your pocket islands.</h2><p>Pick a picture. Pip will lead the way.</p><div class="map-layout"><div class="island-map"><svg viewBox="0 0 390 247" role="img" aria-label="Islands, bridge, cave, your location and quiet camp"><ellipse cx="150" cy="124" rx="139" ry="109" fill="#e9d39d"/><ellipse cx="150" cy="121" rx="129" ry="101" fill="#accb83"/><ellipse cx="327" cy="123" rx="45" ry="37" fill="#e9d39d"/><ellipse cx="327" cy="123" rx="40" ry="32" fill="#accb83"/><path d="M252 123H296" stroke="${state.expedition.boards === 6 ? '#a47c50' : '#d9bf9a'}" stroke-width="9" stroke-dasharray="${state.expedition.boards === 6 ? '0' : '4 4'}"/>${markers.map(p => { const [x, y] = svgPos(p); return `<text x="${x}" y="${y}" font-size="18" text-anchor="middle" dominant-baseline="middle">${p.icon}</text>`; }).join('')}<circle cx="${px}" cy="${py}" r="6" fill="#f6ae48" stroke="#fff8d7" stroke-width="3"/></svg></div><div class="map-destinations">${places.map(p => `<button class="destination" data-action="visit" data-place="${p.id}" aria-label="Follow Pip to ${p.name}"><span>${p.icon}</span><div><strong>${p.name}</strong><small>${p.id === 'expedition' ? expedition.objective() : p.hint}</small></div></button>`).join('')}</div></div><p class="map-key">● The gold dot is you. Repair the bridge to reach the cave. Quiet camp is always open.</p><div class="button-row map-settings"><button data-action="audio">☷ Qur’an audio</button><button data-action="notes">Grown-up notes</button></div></section>`; focusCard();
+    overlay.querySelector('.map-settings').insertAdjacentHTML('afterbegin', '<button data-action="tab" data-tab="expedition">🧭 Expedition story</button>');
   }
   function journal(tab = journalTab) {
     journalTab = tab; setMode('journal');
+    if (tab === 'expedition') {
+      const r = state.expedition;
+      const chapters = [['🐣', 'A little friend, home again', r.rescued], ['🪵', 'Lulu’s long reach and three timbers', r.wood.length === 3], ['🌉', 'Build a bridge, plank by plank', r.boards === 6], ['🦖', 'Toto’s strong, gentle push', r.pushes === 4], ['🐾', 'Follow the cave footprints', r.steps === 3], ['🦴', 'The giant fossil discovery', r.complete]];
+      overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="journal-title">${closeMarkup()}<span class="eyebrow">OUR TEAMWORK EXPEDITION</span><h2 id="journal-title">A story made by you.</h2><p>${expedition.objective()}</p><div class="expedition-chapters">${chapters.map(([icon, name, done]) => `<div class="${done ? 'done' : ''}"><span>${icon}</span><strong>${name}</strong><b>${done ? '✓' : '○'}</b></div>`).join('')}</div><p>No hurry. Your expedition saves here, just like your discoveries.</p><div class="button-row"><button class="primary green" data-action="visit" data-place="expedition">Continue expedition →</button><button data-action="tab" data-tab="dinosaurs">My discoveries</button></div></section>`; focusCard(); return;
+    }
     const list = tab === 'dinosaurs' ? dinos : tab === 'eggs' ? eggs : digs;
     const collected = tab === 'dinosaurs' ? state.dinosaurs : tab === 'eggs' ? state.eggs : state.fossils;
     const icons = tab === 'dinosaurs' ? ['🦕', '🦖', '🦕'] : tab === 'eggs' ? ['🥚', '🥚', '🥚'] : ['🦴', '🐾', '🦴'];
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="journal-title">${closeMarkup()}<span class="eyebrow">LITTLE THINGS. BIG DISCOVERIES.</span><h2 id="journal-title">My discovery book.</h2><div class="journal-tabs" role="group" aria-label="Discovery pages">${[['dinosaurs', '🦕 Friends'], ['eggs', '🥚 Eggs'], ['fossils', '🦴 Fossils']].map(([id, name]) => `<button class="${tab === id ? 'active' : ''}" data-action="tab" data-tab="${id}" aria-pressed="${tab === id}">${name}</button>`).join('')}</div><div class="journal-grid">${list.map((item, i) => `<button class="find-card ${collected.includes(item.id) ? 'found' : ''}" data-action="find" data-type="${tab}" data-index="${i}" aria-label="${collected.includes(item.id) ? 'Visit' : 'Find'} ${item.name}"><span aria-hidden="true">${icons[i]}</span><strong>${collected.includes(item.id) ? item.name : '?'}</strong><small>${collected.includes(item.id) ? tab === 'eggs' ? state.hatched.includes(item.id) ? 'Hatched in your nursery!' : 'Ready for the nursery' : tab === 'fossils' ? state.displayed.includes(item.id) ? 'At home in your museum' : 'Ready for your museum' : 'Your dinosaur friend' : 'Tap to follow Pip’s trail'}</small></button>`).join('')}</div><div class="progress-line">Museum: <b id="display-count">${state.displayed.length}/3</b> displays &nbsp; · &nbsp; Nursery: <b id="hatch-count">${state.hatched.length}/3</b> babies</div><p>Discoveries stay on this browser. No scores. Every find is yours to enjoy.</p><button class="primary green" data-action="resume">More exploring →</button></section>`; focusCard();
+    overlay.querySelector('.journal-tabs').insertAdjacentHTML('beforeend', '<button data-action="tab" data-tab="expedition">🧭 Story</button>');
   }
   function showCamp() {
     setMode('camp'); overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="camp-title">${closeMarkup()}<span class="eyebrow">ALWAYS OPEN. ALWAYS YOUR CHOICE.</span><h2 id="camp-title">A little quiet, together.</h2><p>Bring your grown-up. No tests, scores, or rewards here.</p><div class="camp-choices"><button class="camp-choice" data-action="prayer"><span>☾</span>My prayer trail</button><button class="camp-choice" data-action="quran"><span>☷</span>Qur’an garden</button></div><button data-action="resume">Back to the island →</button></section>`; focusCard(); speak('Welcome to our quiet camp. Choose prayer or Qur’an time with your grown-up, or keep exploring.');
@@ -526,6 +564,9 @@
   }
   function getNearby() {
     if (hatch) return { kind: 'hatching', icon: '🥚', action: hatch.phase === 'opening' ? 'HELLO!' : 'TAP EGG', prompt: hatch.phase === 'opening' ? 'A baby is hatching!' : `Gently tap the egg · ${hatch.taps}/4` };
+    const missionAction = expedition.near();
+    const mountLulu = missionAction?.task === 'wood-0' && riding !== 'longneck' && dinos.some(d => d.id === 'longneck' && Math.hypot(d.model.position.x - position.x, d.model.position.z - position.z) < 4.3);
+    if (missionAction && !mountLulu) return missionAction;
     const objects = [];
     eggs.forEach(e => { if (!state.eggs.includes(e.id)) objects.push({ ...e, kind: 'egg', radius: 2.6, prompt: 'A hidden egg! Pick it up', icon: '🥚', action: 'COLLECT' }); });
     digs.forEach((d, i) => { if (!state.fossils.includes(d.id)) objects.push({ ...d, index: i, kind: 'dig', radius: 3.3, prompt: 'Brush the sand to uncover a fossil', icon: '⛏', action: 'DIG' }); });
@@ -538,7 +579,8 @@
     if (!isPlaying()) return;
     stopWalk(); const o = getNearby();
     if (!o) { help(); return; }
-    if (o.kind === 'egg') {
+    if (o.kind === 'expedition') { expedition.interact(o);
+    } else if (o.kind === 'egg') {
       state.eggs.push(o.id); syncWorld(); celebrate('🥚 A hidden egg!'); say('You found a hidden egg! Take it to the cosy nursery. We can hatch a pretend baby dinosaur together.');
     } else if (o.kind === 'dig') {
       const dig = digs[o.index]; setMode('brush');
@@ -598,13 +640,17 @@
         if (direction.length() > 1) direction.normalize();
       } else if (target) {
         direction.copy(target).sub(position); direction.y = 0;
-        if (direction.length() < 1.6) { const arrived = guideTarget; stopWalk(); destinationRing.visible = false; if (arrived) say(`Here we are! ${arrived.name}. Tap the helping hand to explore.`); direction.set(0, 0, 0); }
+        if (direction.length() < (waypoints.length ? .35 : 1.3)) {
+          if (waypoints.length) target = waypoints.shift();
+          else { const arrived = guideTarget; stopWalk(); destinationRing.visible = false; if (arrived) say(`Here we are! ${arrived.name}. Tap the helping hand to explore.`); }
+          direction.set(0, 0, 0);
+        }
         else direction.normalize();
       }
       moving = direction.lengthSq() > .01;
       if (moving) {
-        position.addScaledVector(direction, dt * (riding ? 10 : target ? 10 : 7.5));
-        if (bound() && target) { stopWalk(); destinationRing.visible = false; say('The sea is the edge of our island. Let’s explore the grass instead.'); }
+        const previous = position.clone(); position.addScaledVector(direction, dt * (riding ? 10 : target ? 10 : 7.5));
+        if (bound(previous) && target) { stopWalk(); destinationRing.visible = false; say('Let’s stay on the path. Repair the bridge to cross, and ask Toto to move the cave rock.'); }
         player.rotation.y = Math.atan2(direction.x, direction.z); autoSaveDirty = true;
       }
       hopVelocity -= 19 * dt; hopHeight = Math.max(0, hopHeight + hopVelocity * dt); if (!hopHeight) hopVelocity = 0;
@@ -618,6 +664,7 @@
       desired.copy(position).add(behind); pip.position.lerp(desired, Math.min(1, dt * 4)); pip.position.y = .42 + (moving && !reduced ? Math.abs(Math.sin(time * 10)) * .15 : 0); pip.rotation.y = player.rotation.y;
       eggs.forEach((e, i) => { if (!reduced) { e.model.position.y = .7 + Math.sin(time * 2 + i) * .12; e.model.rotation.y = time * .25; } });
       updateLiving(dt);
+      expedition.update(dt, time, hopHeight);
       nearest = getNearby(); updatePrompt();
       if (autoSaveDirty && saveTime > 2) { save(); saveTime = 0; }
     }
@@ -641,6 +688,8 @@
     canvas.dataset.dinosaurs = JSON.stringify(dinos.map(d => [Number(d.model.position.x.toFixed(2)), Number(d.model.position.z.toFixed(2))]));
     canvas.dataset.ball = JSON.stringify([Number(beachBall.position.x.toFixed(2)), Number(beachBall.position.z.toFixed(2))]);
     canvas.dataset.baby = state.companion ? JSON.stringify([Number(babies[eggs.findIndex(e => e.id === state.companion)].position.x.toFixed(2)), Number(babies[eggs.findIndex(e => e.id === state.companion)].position.z.toFixed(2))]) : '';
+    canvas.dataset.expedition = JSON.stringify(expedition.snapshot());
+    canvas.dataset.destination = target ? JSON.stringify([target.x, target.z, waypoints.length]) : '';
     game.dataset.activity = hatch ? `hatch-${hatch.phase}` : mode;
     renderer.render(scene, camera);
   }
@@ -648,6 +697,9 @@
   $('#action-button').addEventListener('click', interact); $('#hop-button').addEventListener('click', hop);
   $('#help-button').addEventListener('click', help); $('#repeat-button').addEventListener('click', () => speak(currentMessage));
   $('#map-button').addEventListener('click', showMap); $('#journal-button').addEventListener('click', () => journal()); $('#pause-button').addEventListener('click', pause);
+  const expeditionJournal = document.createElement('button'); expeditionJournal.textContent = '🧭 Expedition story'; expeditionJournal.id = 'expedition-story';
+  document.querySelector('#notes .button-row').append(expeditionJournal);
+  expeditionJournal.onclick = () => { $('#notes').close(); journal('expedition'); };
   $('#cancel-walk').addEventListener('click', () => { stopWalk(); destinationRing.visible = false; });
   $('#course-button').addEventListener('click', startCourse); $('#buddy-button').addEventListener('click', toggleBuddy);
   const joystick = $('#joystick');
@@ -666,8 +718,7 @@
     raycaster.setFromCamera(pointer, camera); const hit = new T.Vector3();
     if (raycaster.ray.intersectPlane(groundPlane, hit)) {
       cancelHatch();
-      const radius = Math.hypot(hit.x / 37.5, hit.z / 29); if (radius > 1) { hit.x /= radius; hit.z /= radius; }
-      target = hit; guideTarget = null; $('#navigation').hidden = true;
+      waypoints = expedition.route(position, hit); target = waypoints.shift(); guideTarget = null; $('#navigation').hidden = true;
     }
   });
   window.addEventListener('keydown', e => {
@@ -697,6 +748,7 @@
   $('#reset-button').addEventListener('click', () => {
     if (!confirm('Reset this island’s discoveries? The illustrated game and learning guides will not change.')) return;
     cancelHatch(); course = null; state.dinosaurs = []; state.eggs = []; state.fossils = []; state.hatched = []; state.displayed = []; state.leaves = 0; state.companion = null; state.trailComplete = false; position.set(0, .4, 16); riding = null;
+    expedition.reset();
     hoops.forEach(h => { h.model.visible = h.sign.visible = false; }); leafGardens.forEach(g => { g.readyAt = 0; });
     babies.forEach((b, i) => { b.position.set(10 + i * 3, .4, 15); b.scale.setScalar(.28); });
     beachBall.position.set(8, 1.2, -1); ballVelocity.set(0, 0, 0);
