@@ -10,6 +10,9 @@
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
   const scene = new T.Scene(); scene.background = new T.Color('#b9ddd6'); scene.fog = new T.Fog('#b9ddd6', 140, 340);
   const camera = new T.OrthographicCamera(-30, 30, 22, -22, .1, 500);
+  const driverCamera = new T.PerspectiveCamera(78, 1, .08, 500);
+  let interior = null, entranceIntent = false, driverView = true, outsidePosition = null;
+  const interiorCache = new Map();
   const sun = new T.DirectionalLight('#fff0d5', 2.6); sun.position.set(-40, 85, 45); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
   Object.assign(sun.shadow.camera, { left: -155, right: 155, top: 155, bottom: -155, near: 1, far: 280 }); sun.shadow.normalBias = .2; sun.shadow.bias = -.0008;
   scene.add(sun, new T.HemisphereLight('#eaf4df', '#78946a', 2.1));
@@ -59,6 +62,10 @@
     road([[0, 15], [p.x * .5, p.z * .5 + 18], [p.x, p.z + 22]], 2.3);
     catalog.build({ group: (x, y, z, parent = scenery) => group(x, y, z, parent), box, ball, cylinder, segment, arch }, p);
     sign(p.name.toUpperCase(), p.x, 15, p.z - 4, 13);
+    // A bright doorway on the safe front edge leads to a walkable cutaway room.
+    arch(scenery, '#f3d182', p.x, .25, p.z + 7, 3.6, 4.8);
+    disk(scenery, '#efcf83', p.x, p.z + 8, 2.3, .28);
+    sign('INSIDE →', p.x, 5.8, p.z + 7, 5.5);
     for (const side of [-1, 1]) { tree(scenery, p.x + side * 24, p.z + 4, 1.2); tree(scenery, p.x + side * 20, p.z + 23, .9); }
   });
   // A loop road joins the districts, as well as the central garden paths.
@@ -77,16 +84,25 @@
   places.forEach(p => { const n = stored.progress?.[p.id], r = stored.rounds?.[p.id]; state.progress[p.id] = Number.isInteger(n) ? Math.max(0, Math.min(p.total, n)) : 0; state.rounds[p.id] = Number.isInteger(r) ? Math.max(0, Math.min(999, r)) : 0; if (state.progress[p.id] === p.total && !state.completed.includes(p.id)) state.completed.push(p.id); });
   const position = new T.Vector3(0, 0, 21), carPosition = new T.Vector3(4, 0, 20);
   const blockers = places.map(p => ({ x: p.x, z: p.z - 6, w: 17, d: 12 }));
-  function walkable(x, z) { return Math.hypot(x, z) < 137 && !blockers.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d); }
+  function walkable(x, z) {
+    if (interior) return Math.abs(x) < 10.8 && z > -8.6 && z < 9 && !interior.blocks.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d);
+    return Math.hypot(x, z) < 137 && !blockers.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d);
+  }
   function safePoint(x, z) {
+    if (interior) {
+      x = Math.max(-10.5, Math.min(10.5, Number.isFinite(x) ? x : 0)); z = Math.max(-8.3, Math.min(8.7, Number.isFinite(z) ? z : 6));
+      if (walkable(x, z)) return new T.Vector3(x, 0, z);
+      for (let r = .5; r < 25; r += .5) for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (walkable(px, pz)) return new T.Vector3(px, 0, pz); }
+      return new T.Vector3(0, 0, 6);
+    }
     x = Math.max(-136, Math.min(136, Number.isFinite(x) ? x : 0)); z = Math.max(-136, Math.min(136, Number.isFinite(z) ? z : 21));
     if (walkable(x, z)) return new T.Vector3(x, 0, z);
     for (let r = 2; r < 160; r += 2) for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (walkable(px, pz)) return new T.Vector3(px, 0, pz); }
     return new T.Vector3(0, 0, 21);
   }
   if (Number.isFinite(stored.x) && Number.isFinite(stored.z)) { position.copy(safePoint(stored.x, stored.z)); carPosition.copy(safePoint(position.x + 4, position.z)); }
-  function save() { try { localStorage.setItem(key, JSON.stringify({ ...state, x: position.x, z: position.z })); } catch { storageOK = false; } }
-  let mode = 'title', started = false, riding = false, time = 0, last = 0, speed = 0, hop = 0, hopSpeed = 0, heading = 0, nearest = null, currentPlace = null, message = '', speechToken = 0, target = null, route = [], saveTime = 0, toastTimer = null, moving = false;
+  function save() { const p = interior ? outsidePosition : position; try { localStorage.setItem(key, JSON.stringify({ ...state, x: p.x, z: p.z })); } catch { storageOK = false; } }
+  let mode = 'title', started = false, riding = false, time = 0, last = 0, speed = 0, hop = 0, hopSpeed = 0, heading = Math.PI, nearest = null, currentPlace = null, message = '', speechToken = 0, target = null, route = [], saveTime = 0, toastTimer = null, moving = false;
   const keys = new Set(), joy = new T.Vector2(); let joyPointer = null;
   function clearInput() { keys.clear(); joy.set(0, 0); joyPointer = null; $('#stick').style.transform = ''; }
   function stopWalk() { target = null; route = []; $('#route').hidden = true; }
@@ -103,7 +119,7 @@
   function setMode(next) {
     stopVoice(); clearInput(); stopWalk(); overlay.querySelector('iframe')?.contentWindow?.postMessage('little-explorer:stop-audio', '*'); mode = next;
     window.Recitation?.hold('world-menu', !['play', 'title'].includes(next));
-    ['#topbar', '#controls', '#guide', '#task'].forEach(id => { $(id).hidden = next !== 'play'; });
+    ['#topbar', '#controls', '#guide', '#task', '#view-tools'].forEach(id => { $(id).hidden = next !== 'play'; });
     overlay.classList.toggle('shaded', next !== 'play'); overlay.innerHTML = '';
     if (next === 'play') canvas.focus({ preventScroll: true });
   }
@@ -125,6 +141,13 @@
   for (const x of [-1, 1]) { segment(buggy, '#f3e2b4', [x, 1.4, -1.3], [x, 3.2, -1.3]); segment(buggy, '#f3e2b4', [x, 1.4, 1], [x, 3.2, 1]); ball(buggy, '#fff3bb', x, 1.15, 1.9, .24, .2, .08); }
   box(buggy, '#83b6a5', 0, 3.25, -.2, 3, .25, 3.3);
   const wheel = mesh(buggy, new T.TorusGeometry(.35, .06, 5, 12), '#48665b', 0, 1.7, .5); wheel.rotation.x = .7;
+  // Real in-world cockpit, seen from the driver's eye rather than a flat overlay.
+  wheel.position.set(0, 2.12, .9); wheel.rotation.x = -.25;
+  segment(buggy, '#48665b', [0, 1.5, 1.2], [0, 2.12, .9], .07);
+  box(buggy, '#d7bc84', 0, 1.72, 1.25, 2.2, .32, .55);
+  box(buggy, '#48665b', .62, 1.94, 1.13, .48, .22, .12);
+  for (const x of [-.18, 0, .18]) segment(buggy, '#e4d4aa', [0, 2.12, .88], [x || .26, x ? 1.87 : 2.12, .88], .025);
+  const speedDots = Array.from({ length: 4 }, (_, i) => ball(buggy, '#a5d2a3', .46 + i * .1, 1.98, 1.05, .035));
   const pip = group(1, 0, 23); ball(pip, '#7eafa0', 0, .55, 0, .55, .55, .8); segment(pip, '#7eafa0', [0, .6, .4], [0, 1.5, .7], .22); ball(pip, '#99c2ab', 0, 1.55, .8, .35, .3, .5);
   for (const side of [-1, 1]) { ball(pip, '#355145', side * .26, 1.62, 1, .055); ball(pip, '#e5d3a2', side * .27, .18, .3, .15, .18, .16); }
   segment(pip, '#7eafa0', [0, .55, -.5], [0, .5, -1.3], .2);
@@ -163,6 +186,57 @@
   const arrow = mesh(scene, new T.ConeGeometry(.65, 1.2, 3), '#f3c158', 0, 4.5, 0); arrow.rotation.z = Math.PI;
   const trail = Array.from({ length: 15 }, () => disk(scene, '#fff3c1', 0, 0, .15, .45));
   const sparkles = Array.from({ length: 18 }, (_, i) => { const model = ball(scene, i % 2 ? '#fff0ae' : '#a2d7c6', 0, 0, 0, .12); model.visible = false; return { model, life: 0, vx: 0, vy: 0, vz: 0 }; });
+
+  function doorway(p) { return { x: p.x, z: p.z + 8.5, icon: '🚪', verb: 'ENTER', text: `Go inside ${p.name}`, kind: 'enter' }; }
+  function interiorGoal() {
+    const h = interior.hotspots.find(h => !h.seen) || interior.hotspots[interior.next % interior.hotspots.length];
+    return { ...h, verb: 'LOOK', kind: 'inspect' };
+  }
+  function playGoal() { return interior ? interiorGoal() : currentPlace ? entranceIntent ? doorway(currentPlace) : goal(currentPlace) : null; }
+  function refreshView() {
+    $('#inside').hidden = !currentPlace;
+    $('#inside b').textContent = interior ? 'OUT' : 'IN';
+    $('#inside').setAttribute('aria-label', interior ? 'Go back outside' : `Find the entrance to ${currentPlace?.name || 'the building'}`);
+    $('#camera-mode').hidden = !riding;
+    $('#camera-mode').setAttribute('aria-pressed', String(driverView));
+    $('#camera-mode').setAttribute('aria-label', driverView ? 'Switch to outside camera' : 'Switch to driver seat camera');
+    $('#camera-mode span').textContent = driverView ? '🚙' : '👀';
+    $('#camera-mode b').textContent = driverView ? 'OUTSIDE' : 'DRIVER';
+    $('#hop').hidden = riding;
+    root.classList.toggle('driving', riding && driverView);
+    $('#joystick .arrows').innerHTML = riding && driverView ? '↑<br>↶　↷<br>↓' : '↑<br>←　→<br>↓';
+    $('#joystick').setAttribute('aria-label', riding && driverView ? 'Slide up to drive, left or right to steer, down to reverse' : 'Slide to walk or drive');
+  }
+  function leaveInterior(aloud = true) {
+    if (!interior) return;
+    [player.model, pip, goalRing, arrow, ...trail].forEach(m => scene.add(m));
+    interior = null; entranceIntent = false; position.copy(outsidePosition); outsidePosition = null;
+    clearInput(); stopWalk(); speed = hop = hopSpeed = 0; camFocus.copy(position); pip.position.copy(position); resize(); updateHUD(); syncModels(); save();
+    if (aloud) say(`Back outside ${currentPlace.name}! Your buggy and your adventure are waiting.`);
+  }
+  function enterInterior() {
+    if (!currentPlace || interior || !window.WonderInteriors) return;
+    const p = currentPlace;
+    if (!interiorCache.has(p.id)) interiorCache.set(p.id, { ...window.WonderInteriors.build({ T, box, ball, cylinder, segment, arch, group }, p), next: 0 });
+    if (riding) carPosition.copy(position);
+    riding = false; entranceIntent = false; outsidePosition = new T.Vector3(p.x, 0, p.z + 12.5);
+    interior = interiorCache.get(p.id); position.set(0, 0, 5.5); heading = Math.PI; speed = hop = hopSpeed = 0;
+    clearInput(); stopWalk(); [player.model, pip, goalRing, arrow, ...trail].forEach(m => interior.scene.add(m));
+    player.model.position.copy(position); pip.position.set(1, .3, 6); camFocus.set(0, 0, 0); resize(); updateHUD(); syncModels(); save();
+    say(`${interior.welcome} Walk around, or tap Pip to find something. The door button always takes you outside.`);
+  }
+  function inspect(h) {
+    h.seen = true; h.changed = !h.changed; h.animate?.(h.changed); interior.next = (interior.hotspots.indexOf(h) + 1) % interior.hotspots.length;
+    say(h.fact); toast(`${h.icon} ${h.text}`); updateHUD();
+  }
+  function insideButton() {
+    if (!active()) return;
+    if (interior) { leaveInterior(); return; }
+    if (!currentPlace) return;
+    const d = doorway(currentPlace);
+    if (Math.hypot(position.x - d.x, position.z - d.z) < 3.8) enterInterior();
+    else { entranceIntent = true; go({ ...d, text: 'Let’s find the bright doorway. Tap Enter when we arrive' }); updateHUD(); }
+  }
 
   function step(p) { return state.progress[p.id]; }
   function gateOrder(p) { return state.rounds[p.id] % 2 ? [2, 1, 0] : [0, 1, 2]; }
@@ -205,18 +279,20 @@
     if (!state.visited.includes(p.id)) { state.visited.push(p.id); save(); say(`Welcome to ${p.name}, in ${p.country}! ${p.fact} ${goal(p).text}. Tap Pip if you want help.`); }
   }
   function updateHUD() {
-    $('#place-title strong').textContent = currentPlace ? currentPlace.name : 'Wonder World';
-    const g = currentPlace ? goal(currentPlace) : { icon: '🚙', text: 'Drive, explore, or tap the globe!' };
+    refreshView();
+    $('#place-title small').textContent = interior ? 'PRETEND LEARNING ROOM' : 'LITTLE EXPLORER';
+    $('#place-title strong').textContent = interior ? interior.name : currentPlace ? currentPlace.name : 'Wonder World';
+    const g = playGoal() || { icon: '🚙', text: 'Drive, explore, or tap the globe!' };
     $('#task-icon').textContent = g.icon; $('#task-title').textContent = g.text;
-    $('#task-dots').innerHTML = currentPlace ? Array.from({ length: currentPlace.total }, (_, i) => `<i class="${i < step(currentPlace) ? 'done' : ''}"></i>`).join('') : '';
-    $('#task-dots').setAttribute('aria-label', currentPlace ? `${step(currentPlace)} of ${currentPlace.total} steps` : 'All destinations are open');
+    $('#task-dots').innerHTML = interior ? interior.hotspots.map(h => `<i class="${h.seen ? 'done' : ''}"></i>`).join('') : currentPlace ? Array.from({ length: currentPlace.total }, (_, i) => `<i class="${i < step(currentPlace) ? 'done' : ''}"></i>`).join('') : '';
+    $('#task-dots').setAttribute('aria-label', interior ? `${interior.hotspots.filter(h => h.seen).length} of ${interior.hotspots.length} things explored` : currentPlace ? `${step(currentPlace)} of ${currentPlace.total} steps` : 'All destinations are open');
   }
 
   // The same obstacle rules apply to driving, walking, tap routes and saved positions.
   function clearLine(a, b) { const d = Math.hypot(a.x - b.x, a.z - b.z), steps = Math.max(1, Math.ceil(d / 1.2)); for (let i = 1; i <= steps; i++) if (!walkable(a.x + (b.x - a.x) * i / steps, a.z + (b.z - a.z) * i / steps)) return false; return true; }
   function findRoute(from, destination) {
     const end = safePoint(destination.x, destination.z); if (clearLine(from, end)) return [end];
-    const size = 3, limit = 46, nodeKey = (x, z) => `${x},${z}`;
+    const size = interior ? .75 : 3, limit = interior ? 16 : 46, nodeKey = (x, z) => `${x},${z}`;
     const sx = Math.round(from.x / size), sz = Math.round(from.z / size), ex = Math.round(end.x / size), ez = Math.round(end.z / size);
     const open = [{ x: sx, z: sz, g: 0, h: Math.hypot(ex - sx, ez - sz), parent: null }], best = new Map([[nodeKey(sx, sz), 0]]); let found = null, visited = 0;
     while (open.length && visited++ < 9000) {
@@ -242,11 +318,12 @@
   }
   function help() {
     if (!active()) return;
-    if (currentPlace) go(goal(currentPlace));
+    if (interior || currentPlace) go(playGoal());
     else { const p = places.find(p => !state.completed.includes(p.id)) || places[0]; go({ x: p.x, z: p.z + 23, text: `Let’s explore ${p.name}` }); }
   }
   function fastTravel(id) {
     const p = places.find(p => p.id === id); if (!p) return;
+    leaveInterior(false); entranceIntent = false;
     position.copy(safePoint(p.x, p.z + 23)); carPosition.copy(safePoint(p.x + 4, p.z + 23)); riding = false; speed = hop = hopSpeed = 0; currentPlace = p;
     const m = activityModels.get('machu'); if (id === 'machu' && step(p) > 0 && step(p) < p.total) m.llama.position.set(position.x - p.x - 2, 0, position.z - p.z + 1);
     setMode('play'); updateHUD(); syncModels(); camFocus.copy(position); resize(); save();
@@ -257,7 +334,7 @@
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="travel-title">${closeButton()}<small>EVERY PLACE IS OPEN</small><h2 id="travel-title">Where shall we go?</h2><p>Tap a picture. Hear its name. Go exploring!</p><div class="travel-grid">${places.map(p => `<button class="travel-card ${currentPlace?.id === p.id ? 'active' : ''}" data-act="visit" data-place="${p.id}" aria-label="Explore ${p.name}, ${p.country}">${catalog.picture(p.id)}<strong>${p.name}</strong><small>${p.country}</small>${state.completed.includes(p.id) ? '<span class="stamp" aria-label="Explored">✓</span>' : ''}</button>`).join('')}<button class="travel-card" data-act="home" aria-label="Go to the home garden and buggy">${catalog.picture('home')}<strong>Home garden</strong><small>Buggy · ball · quiet camp</small></button></div><div class="passport" aria-label="${state.completed.length} of seven places explored">${places.map(p => `<i class="${state.completed.includes(p.id) ? 'done' : ''}" title="${p.name}">${state.completed.includes(p.id) ? '✓' : '·'}</i>`).join('')}</div><div class="buttons"><button data-act="island">🦕 Dinosaur island</button><button data-act="camp">☾ Quiet camp</button></div><p class="fine">An imaginary explorer park with miniature landmarks, not a real-world map. All activities use pretend gardens, paths and building models.</p></section>`;
     focusCard(); speak('Where shall we go? Tap a big picture to visit a wonder. Every place is open.');
   }
-  function home() { position.set(0, 0, 21); carPosition.set(4, 0, 20); riding = false; speed = 0; currentPlace = null; setMode('play'); camFocus.copy(position); resize(); updateHUD(); save(); say('Home again! Your little buggy is waiting. Or visit the quiet camp, chase the ball, and choose another picture on the globe.'); }
+  function home() { leaveInterior(false); entranceIntent = false; position.set(0, 0, 21); carPosition.set(4, 0, 20); riding = false; speed = 0; currentPlace = null; setMode('play'); camFocus.copy(position); resize(); updateHUD(); save(); say('Home again! Your little buggy is waiting. Or visit the quiet camp, chase the ball, and choose another picture on the globe.'); }
   function pause() {
     if (!started) return; save(); setMode('pause');
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="pause-title">${closeButton()}<small>PIP WILL WAIT</small><h2 id="pause-title">A little breather.</h2><p>Your adventures are saved. No hurry.</p><div class="buttons"><button class="primary" data-act="resume">▶ Play</button><button data-act="travel">🌍 Go somewhere</button></div><div class="grownup-grid"><button data-act="audio">☷ Qur’an audio</button><button data-act="camp">☾ Quiet camp</button><button data-act="notes">Grown-up guide</button><button data-act="island">🦕 Dinosaur island</button></div></section>`; focusCard();
@@ -265,6 +342,7 @@
   function notes() {
     setMode('notes');
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="notes-title">${closeButton('pause')}<small>FOR YOUR GROWN-UP</small><h2 id="notes-title">Freedom to explore. Space to learn.</h2><p>A gentle open-world explorer park for ages 5–6. The child’s screen has a picture globe, movement joystick, hop, one changing action button, and Pip’s spoken help. No independent reading is required; device English speech availability varies.</p><p>Walk or drive the electric pretend buggy between seven miniature wonder districts, or use picture travel. Arrow keys/WASD move, Space hops, E interacts, Escape pauses. Tap the ground to walk; tap Pip to follow a safe route to the next activity. There are no enemies, crime, weapons, traffic collisions, timers, lost lives, purchases, ads, accounts, music or microphone access.</p><div class="site-facts"><strong>The New Seven Wonders</strong><p>Great Wall, Petra, Taj Mahal, Colosseum, Chichén Itzá, Machu Picchu, and the Christ the Redeemer site on Corcovado. To respect the family’s request not to depict prophets, Brazil is represented by the mountain, forest and viewpoint, without the statue or any religious figure.</p><p>These are stylised, reduced-scale, imaginary park replicas, not historical reconstructions or geographical neighbours. Children garden and build on pretend activity grounds, never on the actual protected monuments. All seven destinations are open immediately; stamps celebrate exploration, not tests.</p></div><p>Quiet camp is always open, retaining the existing parent-guided Muhammadiyah prayer sequence and four surahs. Religious learning gives no game rewards and unlocks nothing. Review religious material with a qualified teacher. No depictions of Allah or prophets.</p><p>Optional Juz Amma uses the existing community-attributed Muzammil Hasballah stream; it is not independently authenticated as an official release. Internet is needed for audio. Playback pauses for narration, menus, learning and hidden tabs. Nothing streams before an explicit Start tap.</p><p>Saved on this browser: site activity steps, completed postcards, replay variations, voice setting and explorer position. No name, age or birthday is stored. Original dinosaur discoveries remain in their separate save. ${storageOK ? '' : '<strong>Storage is unavailable: this visit remains playable but cannot be saved.</strong>'}</p><div class="buttons"><button data-act="voice" aria-pressed="${state.voice}">🔊 English voice: ${state.voice ? 'on' : 'off'}</button><button data-act="fullscreen">Full screen</button><button data-act="reset">Reset wonder activities</button></div><p class="fine">Local procedural art · Three.js 0.160.1 · <a href="vendor/THREE-LICENSE.txt">MIT licence</a> · <a href="play.html">Original illustrated adventure</a>.</p></section>`; focusCard();
+    overlay.querySelector('.site-facts').insertAdjacentHTML('beforeend', '<p><strong>New: inside and behind the wheel.</strong> Tap the doorway picture to find an entrance, then Enter to park the buggy and walk inside. Each destination has a bright, roof-cutaway learning room with three inspectable models. These are fictional rooms inspired by architecture and materials, not authenticated monument interiors. Chichén Itzá uses a pretend visitor discovery room; Corcovado uses an imaginary forest lodge, without a statue or religious figure. Exit is always available from the door button. Indoor discoveries give no rewards and do not change outdoor activity progress. Indoor position is never saved: reloading safely returns outside.</p><p>The buggy opens in a true perspective driver-seat view with a 3D steering wheel and dashboard. Up drives, left/right steers, down reverses; sideways-only input gently rolls forward while turning. The camera button restores the original overhead controls. No camera shake, automatic zoom or driving hops. Tap footprints to get out.</p>');
   }
   function campMenu() {
     setMode('camp'); overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="camp-title">${closeButton()}<small>ALWAYS OPEN · ALWAYS OPTIONAL</small><h2 id="camp-title">A little quiet, together.</h2><p>Choose with your grown-up. No points, rewards or tests.</p><div class="buttons"><button data-act="prayer">☾ Prayer together</button><button data-act="quran">☷ Qur’an garden</button></div><div class="buttons"><button class="primary" data-act="resume">Back to exploring →</button></div></section>`; focusCard(); speak('Welcome to quiet camp. Choose prayer or Qur’an with your grown-up, or keep exploring.');
@@ -295,6 +373,12 @@
     render(); focusCard(); speak('Let’s build an arch. Find a tall block. Drag it to the glowing space, or tap the block and then the space.');
   }
   function nearby() {
+    if (interior) {
+      if (Math.hypot(position.x - interior.exit.x, position.z - interior.exit.z) < 1.65) return { ...interior.exit, kind: 'exit' };
+      const h = interior.hotspots.find(h => Math.hypot(position.x - h.x, position.z - h.z) < 2.5);
+      return h ? { ...h, source: h, kind: 'inspect', verb: 'LOOK' } : null;
+    }
+    if (currentPlace) { const d = doorway(currentPlace); if (Math.hypot(position.x - d.x, position.z - d.z) < 3.8) return d; }
     if (currentPlace) { const g = goal(currentPlace), d = Math.hypot(position.x - g.x, position.z - g.z); if (d < 3.5 && !(currentPlace.id === 'petra' || currentPlace.id === 'chichen' || currentPlace.id === 'machu' && [1, 2].includes(step(currentPlace))) || g.done && d < 4) return { kind: 'activity', ...g }; }
     if (Math.hypot(position.x - 10, position.z + 1) < 5) return { kind: 'camp', icon: '☾', verb: 'QUIET', text: 'Quiet camp with your grown-up' };
     if (Math.hypot(position.x + 12, position.z) < 5) return { kind: 'island', icon: '🦕', verb: 'DINOS', text: 'Visit dinosaur island' };
@@ -304,7 +388,10 @@
   }
   function interact() {
     if (!active()) return; stopWalk(); const o = nearby(); if (!o) { help(); return; }
-    if (o.kind === 'car') { riding = !riding; speed = 0; if (!riding) { carPosition.copy(position); position.copy(safePoint(position.x + 2.8, position.z)); } say(riding ? 'Let’s drive! Slide the circle to steer. No traffic, no hurry. Tap the footprints to hop out.' : 'Back on explorer feet! Your buggy will wait right here.'); }
+    if (o.kind === 'enter') { enterInterior(); return; }
+    if (o.kind === 'exit') { leaveInterior(); return; }
+    if (o.kind === 'inspect') { inspect(o.source); return; }
+    if (o.kind === 'car') { riding = !riding; speed = 0; if (!riding) { carPosition.copy(position); position.copy(safePoint(position.x + 2.8, position.z)); } else { position.copy(carPosition); driverView = true; } updateHUD(); say(riding ? 'You are in the driver’s seat! Push up to drive, left or right to steer, and down to reverse. Tap the camera to see outside. Tap the footprints to get out.' : 'Back on explorer feet! Your buggy will wait right here.'); }
     else if (o.kind === 'camp') campMenu();
     else if (o.kind === 'island') islandPrompt();
     else {
@@ -351,7 +438,7 @@
     birds.forEach((b, i) => { b.model.visible = i < grown * 2; if (!b.model.visible) return; const a = (reduced ? 0 : time * .5) + b.phase; b.model.position.set(rio.x + Math.cos(a) * 11, 4.6 + (reduced ? 0 : Math.sin(time + i) * .8), rio.z + 18 + Math.sin(a) * 6); b.model.rotation.y = -a; b.wings.forEach((w, j) => { w.rotation.z = !reduced ? Math.sin(time * 11 + i) * (j ? 1 : -1) : .2; }); });
   }
   const camFocus = position.clone(), camOffset = new T.Vector3(23, 32, 34), raycaster = new T.Raycaster(), pointer = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0);
-  function resize() { const w = root.clientWidth, h = root.clientHeight, span = currentPlace ? w / h < .8 ? 54 : 52 : w / h < .8 ? 37 : 43; renderer.setSize(w, h, false); camera.left = -span * w / h / 2; camera.right = span * w / h / 2; camera.top = span / 2; camera.bottom = -span / 2; camera.updateProjectionMatrix(); }
+  function resize() { const w = root.clientWidth, h = root.clientHeight, span = interior ? w / h < .8 ? 43 : 35 : currentPlace ? w / h < .8 ? 54 : 52 : w / h < .8 ? 37 : 43; renderer.setSize(w, h, false); camera.left = -span * w / h / 2; camera.right = span * w / h / 2; camera.top = span / 2; camera.bottom = -span / 2; camera.updateProjectionMatrix(); driverCamera.aspect = w / h; driverCamera.fov = w / h < .8 ? 88 : 78; driverCamera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(root);
   function frame(now) {
     requestAnimationFrame(frame); const dt = Math.min(.05, (now - (last || now)) / 1000); last = now; if (document.hidden) return;
@@ -361,7 +448,16 @@
       const h = (keys.has('ArrowRight') || keys.has('d') ? 1 : 0) - (keys.has('ArrowLeft') || keys.has('a') ? 1 : 0) + joy.x;
       const v = (keys.has('ArrowDown') || keys.has('s') ? 1 : 0) - (keys.has('ArrowUp') || keys.has('w') ? 1 : 0) + joy.y;
       const direction = new T.Vector3();
-      if (Math.hypot(h, v) > .12) { stopWalk(); direction.set(h * .828 + v * .56, 0, -h * .56 + v * .828); if (direction.length() > 1) direction.normalize(); }
+      const cockpit = riding && driverView;
+      const manualDrive = cockpit && Math.hypot(h, v) > .12;
+      if (Math.hypot(h, v) > .12) {
+        stopWalk();
+        if (cockpit) {
+          const throttle = Math.abs(v) > .12 ? -v * (v > 0 ? .55 : 1) : .4;
+          heading -= h * dt * 1.55 * (throttle < 0 ? -1 : 1);
+          direction.set(Math.sin(heading) * throttle, 0, Math.cos(heading) * throttle);
+        } else { direction.set(h * .828 + v * .56, 0, -h * .56 + v * .828); if (direction.length() > 1) direction.normalize(); }
+      }
       else if (target) { direction.copy(target).sub(position); if (direction.length() < (route.length ? .65 : 1.2)) { if (route.length) target = route.shift(); else stopWalk(); direction.set(0, 0, 0); } else direction.normalize(); }
       moving = direction.lengthSq() > .01;
       speed += ((moving ? riding ? 17 : target ? 10 : 8 : 0) - speed) * Math.min(1, dt * (riding ? 4 : 12));
@@ -371,7 +467,10 @@
         else if (walkable(position.x + dx, position.z)) position.x += dx;
         else if (walkable(position.x, position.z + dz)) position.z += dz;
         else { speed = 0; if (target) { stopWalk(); say('Let’s go around the little model. Tap Pip for a clear path.'); } }
-        heading = Math.atan2(direction.x, direction.z);
+        if (!manualDrive) {
+          const angle = Math.atan2(direction.x, direction.z);
+          heading = cockpit ? heading + Math.atan2(Math.sin(angle - heading), Math.cos(angle - heading)) * Math.min(1, dt * 5) : angle;
+        }
       }
       hopSpeed -= 19 * dt; hop = Math.max(0, hop + hopSpeed * dt); if (!hop) hopSpeed = 0;
       player.model.position.set(position.x, .25 + hop + (riding ? 1.1 : 0), position.z); player.model.rotation.y = heading; player.model.scale.setScalar(riding ? .68 : 1);
@@ -380,35 +479,52 @@
       buggy.position.set(carPosition.x, .25 + (riding ? hop : 0), carPosition.z); wheels.forEach(w => { if (moving && riding) w.rotation.x += dt * speed * 1.5; });
       const behind = new T.Vector3(position.x - Math.sin(heading) * 2, 0, position.z - Math.cos(heading) * 2); pip.position.lerp(behind, Math.min(1, dt * 5)); pip.position.y = .3 + (!reduced && moving ? Math.abs(Math.sin(time * 9)) * .15 : 0); pip.rotation.y = heading;
       carried.position.set(position.x, riding ? 3.8 : 2.5, position.z - .8);
-      const found = places.find(p => Math.hypot(position.x - p.x, position.z - p.z) < 34) || null;
-      if (found?.id !== currentPlace?.id) { currentPlace = found; resize(); updateHUD(); syncModels(); if (found) visitMessage(found); }
-      updateActivities(dt); nearest = nearby(); updateAction();
+      const found = interior ? currentPlace : places.find(p => Math.hypot(position.x - p.x, position.z - p.z) < 34) || null;
+      if (found?.id !== currentPlace?.id) { currentPlace = found; entranceIntent = false; resize(); updateHUD(); syncModels(); if (found) visitMessage(found); }
+      if (!interior) updateActivities(dt);
+      nearest = nearby(); updateAction();
       const dx = beachBall.position.x - position.x, dz = beachBall.position.z - position.z, d = Math.hypot(dx, dz);
-      if (moving && d < (riding ? 2.7 : 1.7)) ballVelocity.set(dx / Math.max(.1, d), 0, dz / Math.max(.1, d)).multiplyScalar(riding ? 16 : 10);
-      const next = beachBall.position.clone().addScaledVector(ballVelocity, dt); if (walkable(next.x, next.z)) beachBall.position.copy(next); else ballVelocity.multiplyScalar(-.5);
+      if (!interior && moving && d < (riding ? 2.7 : 1.7)) ballVelocity.set(dx / Math.max(.1, d), 0, dz / Math.max(.1, d)).multiplyScalar(riding ? 16 : 10);
+      const next = beachBall.position.clone().addScaledVector(ballVelocity, dt); if (!interior && walkable(next.x, next.z)) beachBall.position.copy(next); else ballVelocity.multiplyScalar(-.5);
       ballVelocity.multiplyScalar(Math.exp(-dt)); beachBall.rotation.x += ballVelocity.z * dt; beachBall.rotation.z -= ballVelocity.x * dt;
       if (saveTime > 2) { save(); saveTime = 0; }
     }
-    const g = mode === 'play' && currentPlace ? goal(currentPlace) : null;
+    const g = mode === 'play' ? playGoal() : null;
     goalRing.visible = arrow.visible = !!g;
     if (g) { goalRing.position.set(g.x, .47, g.z); arrow.position.set(g.x, 4.4 + (!reduced ? Math.sin(time * 3) * .35 : 0), g.z); }
     const guide = target || g; trail.forEach((dot, i) => { dot.visible = active() && !!guide; if (guide) { const f = (i + 1) / 16; dot.position.set(position.x + (guide.x - position.x) * f, .45, position.z + (guide.z - position.z) * f); } });
     const focus = position.clone();
-    if (currentPlace) { focus.x = position.x * .8 + currentPlace.x * .2; focus.z -= 8; focus.y = 2; }
+    if (interior) { focus.set(position.x * .18, .5, position.z * .15); }
+    else if (currentPlace) { focus.x = position.x * .8 + currentPlace.x * .2; focus.z -= 8; focus.y = 2; }
     camFocus.lerp(focus, reduced ? 1 : Math.min(1, dt * 5)); camera.position.copy(camFocus).add(camOffset); camera.lookAt(camFocus);
+    const cockpit = riding && driverView;
+    player.model.visible = !cockpit; pip.visible = !cockpit;
+    carried.visible = !interior && !cockpit && currentPlace?.id === 'wall' && step(currentPlace) % 2 === 1;
+    if (cockpit) {
+      // Fixed eye height, no camera shake or head bob. Steering changes the view with the car.
+      driverCamera.position.set(position.x - Math.sin(heading) * .65, 2.88 + hop, position.z - Math.cos(heading) * .65);
+      driverCamera.lookAt(position.x + Math.sin(heading) * 15, 2.45 + hop, position.z + Math.cos(heading) * 15);
+      speedDots.forEach((dot, i) => { dot.visible = speed > i * 4; });
+    }
     canvas.dataset.x = position.x.toFixed(2); canvas.dataset.z = position.z.toFixed(2); canvas.dataset.riding = String(riding); canvas.dataset.place = currentPlace?.id || 'home'; canvas.dataset.goal = g ? JSON.stringify({ x: g.x, z: g.z, text: g.text }) : ''; canvas.dataset.progress = JSON.stringify(state.progress); canvas.dataset.speed = speed.toFixed(2); canvas.dataset.mode = mode;
-    renderer.render(scene, camera);
+    canvas.dataset.interior = interior ? currentPlace.id : '';
+    canvas.dataset.camera = cockpit ? 'driver' : 'outside';
+    canvas.dataset.heading = heading.toFixed(3);
+    renderer.render(interior ? interior.scene : scene, cockpit ? driverCamera : camera);
   }
-  function doHop() { if (active() && !hop) hopSpeed = riding ? 7 : 6; }
+  function doHop() { if (active() && !hop && !riding) hopSpeed = 6; }
   function start() { started = true; setMode('play'); updateHUD(); say('Salaam, little explorer! Slide the circle to walk. The gold car button gives you a ride. Tap the big globe to choose a wonder. Pip will help you!'); }
   $('#travel').onclick = travelMenu; $('#pause').onclick = pause; $('#help').onclick = help; $('#repeat').onclick = () => speak(message); $('#do').onclick = interact; $('#hop').onclick = doHop; $('#cancel-route').onclick = stopWalk;
+  $('#inside').onclick = insideButton;
+  $('#camera-mode').onclick = () => { if (!active() || !riding) return; clearInput(); stopWalk(); speed = 0; driverView = !driverView; updateHUD(); say(driverView ? 'Back in the driver’s seat! Up to go, left or right to steer, down to reverse.' : 'Outside view! Slide the circle towards the place you want to drive.'); };
+  $('#cancel-route').onclick = () => { stopWalk(); entranceIntent = false; updateHUD(); };
   const joystick = $('#joystick');
   function moveJoy(e) { const r = joystick.getBoundingClientRect(), radius = r.width * .32; joy.set((e.clientX - r.left - r.width / 2) / radius, (e.clientY - r.top - r.height / 2) / radius); if (joy.length() > 1) joy.normalize(); $('#stick').style.transform = `translate(${joy.x * radius}px,${joy.y * radius}px)`; }
   joystick.onpointerdown = e => { if (!active() || joyPointer !== null) return; e.preventDefault(); joyPointer = e.pointerId; joystick.setPointerCapture(joyPointer); moveJoy(e); };
   joystick.onpointermove = e => { if (e.pointerId === joyPointer) { e.preventDefault(); moveJoy(e); } };
   const release = e => { if (e.pointerId === joyPointer) { joyPointer = null; joy.set(0, 0); $('#stick').style.transform = ''; } };
   joystick.onpointerup = joystick.onpointercancel = joystick.onlostpointercapture = release;
-  canvas.onpointerdown = e => { if (!active()) return; e.preventDefault(); canvas.focus({ preventScroll: true }); const r = canvas.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); raycaster.setFromCamera(pointer, camera); const hit = new T.Vector3(); if (raycaster.ray.intersectPlane(plane, hit)) go(hit, false); };
+  canvas.onpointerdown = e => { if (!active()) return; e.preventDefault(); canvas.focus({ preventScroll: true }); const r = canvas.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); raycaster.setFromCamera(pointer, riding && driverView ? driverCamera : camera); const hit = new T.Vector3(); if (raycaster.ray.intersectPlane(plane, hit)) go(hit, false); };
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape') { if ($('#recitation-dialog').open) return; if (active()) pause(); else if (started && mode !== 'title') setMode('play'); return; }
     if (!active() || e.target.closest('input,select,textarea,iframe')) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#174c47"><title>Pip’s Wonder World · Little Explorer</title>
-  <link rel="stylesheet" href="world.css?v=1">
+  <link rel="stylesheet" href="world.css?v=interiors-1">
   <script src="vendor/three.min.js" defer></script><script src="recitation.js" defer></script>
-  <script src="world-places.js?v=1" defer></script><script src="world.js?v=1" defer></script>
+  <script src="world-places.js?v=1" defer></script><script src="world-interiors.js?v=interiors-1" defer></script><script src="world.js?v=interiors-1" defer></script>
 </head>
 <body>
   <main id="world" aria-label="Pip’s Wonder World">
@@ -15,6 +15,10 @@
       <div id="place-title"><small>LITTLE EXPLORER</small><strong>Wonder World</strong></div>
       <button id="pause" class="round" aria-label="Pause and open grown-up options">Ⅱ</button>
     </header>
+    <div id="view-tools" hidden>
+      <button id="inside" class="picture" aria-label="Find the building entrance" hidden><span>🚪</span><b>IN</b></button>
+      <button id="camera-mode" class="picture" aria-label="Switch to outside camera" aria-pressed="true" hidden><span>📷</span><b>VIEW</b></button>
+    </div>
     <section id="task" hidden aria-label="Current activity"><span id="task-icon">🧭</span><div><strong id="task-title">An adventure is waiting</strong><div id="task-dots" aria-label="Activity progress"></div></div></section>
     <div id="route" hidden><span>👣</span><button id="cancel-route" aria-label="Stop following Pip">✕</button></div>
     <section id="guide" hidden><button id="help" aria-label="Pip, show me what to do"><span>🦕</span><b>HELP</b></button><p id="message" role="status"></p><button id="repeat" aria-label="Hear that again">🔊</button></section>

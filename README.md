@@ -4,6 +4,14 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
+### New: go inside and take the driver’s seat
+
+**Walk inside:** tap the doorway picture at a destination to find the entrance, then tap **Enter**. Explore a bright, roof-cutaway room, walk up to models and tap **Look** to hear about what you see. Pip can guide you to each discovery; the **Out** picture always takes you straight outside. There are seven different rooms and 21 architectural/nature discoveries: a watchtower, sandstone hall, pattern hall, arch walkway, visitor discovery room, stone house and forest lodge.
+
+These are **fictional educational rooms**, not reconstructions of actual monument interiors or promises of real-world access. The Chichén Itzá room is a pretend visitor learning space, not a passage into the pyramid. Corcovado has an imaginary forest lodge, not a statue interior. No religious figures or tomb contents are depicted. Indoor exploring does not award rewards or change outdoor activity progress. Reloading safely returns outside; the buggy waits where it was parked.
+
+**Drive from inside the car:** getting in opens a true perspective view from the buggy’s driver seat, showing the 3D steering wheel, dashboard, pillars and road ahead. Push up to go, left/right to steer, down to reverse. Moving sideways alone gives a gentle forward turn. Tap the camera picture for the original overhead view, or footprints to get out. No camera shake, head bob or driving jumps. Controls work on tablet and keyboard.
+
 ### Explore the New Seven Wonders
 
 | Place | Hands-on play |
