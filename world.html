@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#174c47"><title>Pip’s Wonder World · Little Explorer</title>
+  <link rel="stylesheet" href="world.css?v=1">
+  <script src="vendor/three.min.js" defer></script><script src="recitation.js" defer></script>
+  <script src="world-places.js?v=1" defer></script><script src="world.js?v=1" defer></script>
+</head>
+<body>
+  <main id="world" aria-label="Pip’s Wonder World">
+    <canvas id="view" tabindex="0" aria-label="3D wonder park. Arrow keys or WASD to move, Space to hop, E to do the nearby activity. Tap the ground to walk."></canvas>
+    <header id="topbar" hidden>
+      <button id="travel" class="picture blue" aria-label="Choose a place to explore"><span>🌍</span><b>GO!</b></button>
+      <div id="place-title"><small>LITTLE EXPLORER</small><strong>Wonder World</strong></div>
+      <button id="pause" class="round" aria-label="Pause and open grown-up options">Ⅱ</button>
+    </header>
+    <section id="task" hidden aria-label="Current activity"><span id="task-icon">🧭</span><div><strong id="task-title">An adventure is waiting</strong><div id="task-dots" aria-label="Activity progress"></div></div></section>
+    <div id="route" hidden><span>👣</span><button id="cancel-route" aria-label="Stop following Pip">✕</button></div>
+    <section id="guide" hidden><button id="help" aria-label="Pip, show me what to do"><span>🦕</span><b>HELP</b></button><p id="message" role="status"></p><button id="repeat" aria-label="Hear that again">🔊</button></section>
+    <section id="controls" hidden aria-label="Play controls">
+      <div id="joystick" role="group" aria-label="Slide to walk or drive"><div class="arrows">↑<br>←　→<br>↓</div><div id="stick"></div></div>
+      <div class="action-buttons"><button id="hop" class="picture round" aria-label="Hop"><span>↑</span><b>HOP</b></button><button id="do" class="picture gold" aria-label="Explore nearby"><span id="do-icon">✋</span><b id="do-label">DO!</b></button></div>
+    </section>
+    <div id="toast" role="status" hidden></div><div id="overlay"></div>
+    <section id="fallback" hidden><h1>Let’s try another adventure.</h1><p>This device could not start the 3D world. Your discoveries are safe.</p><a href="play.html">Open the illustrated game →</a></section>
+  </main>
+  <dialog id="recitation-dialog" aria-labelledby="recitation-title"><button class="close" id="close-recitation" aria-label="Close recitation controls">×</button><small>OPTIONAL · RECORDED RECITATION</small><h2 id="recitation-title">Juz Amma</h2><p>Muzammil Hasballah · community-attributed recording</p><div class="buttons"><button id="recitation-toggle" aria-pressed="false">▶ Start recitation</button><button id="recitation-stop">Stop & rewind</button></div><p id="recitation-status" role="status">Tap Start to stream. Internet needed.</p><label>Volume <input id="recitation-volume" type="range" min="0" max="1" step="0.05" value="0.35"><output id="volume-value">35%</output></label><label><input id="recitation-loop" type="checkbox" checked> Repeat Juz Amma</label><p class="fine">About 81 minutes / 117 MB; Wi-Fi recommended. Pauses for spoken guidance, activities, learning, breaks and hidden tabs. <a href="https://archive.org/details/MuzammilHasballahJuzAmma" target="_blank" rel="noopener noreferrer">Community upload and attribution</a>; not independently authenticated as an official release. No recording is redistributed.</p></dialog>
+  <!-- Shared audio controller expects both open controls; these live in the pause menu. -->
+  <button id="open-recitation" hidden>Qur’an audio</button><button id="hud-recitation" hidden>Qur’an audio</button>
+</body>
+</html>

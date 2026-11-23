@@ -71,7 +71,7 @@
   const listen = (label = 'Read these instructions aloud') => `<button class="listen-button" data-action="listen" aria-label="${label}">${icon('sound')}</button>`;
   function mapView() {
     return `<section class="greeting"><div><span class="eyebrow">ASSALAMU ALAIKUM, LITTLE EXPLORER</span><h1>A big world. Little discoveries.</h1><p>Dig, discover, and grow in faith. One little step at a time.</p></div><span class="small-pill">${icon('leaf')} MADE FOR LITTLE HEARTS</span></section>
-    <section class="hero"><div class="hero-copy"><span class="hero-tag">✦ NEW · THE TEAMWORK EXPEDITION</span><h2>Help. Build.<br><span>Explore together.</span></h2><p>Guide a lost baby home, build a bridge, and use Lulu’s reach and Toto’s strength to discover a sunlit fossil cave.</p><button class="button" data-action="start">Play the adventure ${icon('arrow')}</button></div>${scene('dig', true)}<span class="scene-label">Pip’s Dinosaur Island · Connected 3D adventure</span></section>
+    <section class="hero"><div class="hero-copy"><span class="hero-tag">✦ NEW · SEVEN WONDERS. ONE LITTLE EXPLORER.</span><h2>Drive. Discover.<br><span>A world of wonder.</span></h2><p>Hop into a little buggy, explore seven amazing places, grow gardens, build an arch, and guide a little llama home. Big picture buttons. Pip’s spoken help. No hurry.</p><button class="button" data-action="start">Play Wonder World ${icon('arrow')}</button></div>${scene('dig', true)}<span class="scene-label">Pip’s Wonder World · Open-world learning play</span></section>
     <section aria-labelledby="destinations"><div class="section-heading"><div><h2 id="destinations">Where shall we go?</h2><p>Pick a little adventure. There’s no wrong way to begin.</p></div><span class="step-number">3 PLACES TO DISCOVER</span></div><div class="destination-grid">
     ${destination('dig', 'NATURE & WONDER', 'Dinosaur dig', 'Brush away the sand.<br>What will you discover?', 'Let’s dig', 'HANDS-ON DISCOVERY', 'bone')}
     ${destination('egypt', 'HISTORY & CURIOSITY', 'Egypt explorers', 'Follow the river.<br>Peek into the ancient past.', 'Explore Egypt', 'A LITTLE HISTORY', 'pyramid')}
@@ -214,7 +214,7 @@
     if (action === 'parents') return openParents();
     if (action === 'listen') return readInstructions();
     if (action === 'start') {
-      location.href = 'island.html';
+      location.href = 'world.html';
       return;
     }
     if (action === 'play') return void playAyah();

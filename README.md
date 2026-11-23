@@ -1,6 +1,32 @@
-# Pip’s Dinosaur Island
+# Pip’s Wonder World
 
-## [Play the 3D island](https://handysatria1.github.io/dino-desert-quest/island.html)
+## [Play Wonder World](https://handysatria1.github.io/dino-desert-quest/world.html)
+
+A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
+
+### Explore the New Seven Wonders
+
+| Place | Hands-on play |
+| --- | --- |
+| Great Wall · China | Carry three stones and build a pretend model wall. |
+| Petra · Jordan | Follow coloured arches in sequence; replays reverse the trail. |
+| Taj Mahal · India | Water three matching pairs of flower beds and discover symmetry. |
+| Colosseum · Italy | Drag or tap shapes to build a toy arch with two supports and a curved top. |
+| Chichén Itzá · Mexico | Count five stepping stones, hopping on the two high ones. |
+| Machu Picchu · Peru | Guide a following llama through terrace paths and into its meadow. |
+| Corcovado · Brazil | Plant and water three trees, then watch birds return. |
+
+The seventh site is the location of Christ the Redeemer. **No statue or religious figure is depicted**, respecting the family’s no-prophet-depictions requirement; the game represents the mountain, forest and viewpoint instead. All seven destinations are open immediately. Models are stylised miniature replicas in an imaginary park, not geographic neighbours, historical reconstructions, or activities on actual protected monuments.
+
+**Child controls:** slide the movement circle or tap the ground; tap the gold button to ride, plant, water, build or help; tap Pip’s face for a guided route; tap the globe to choose a picture. Arrow keys/WASD, Space and E also work. The buggy has forgiving steering, no fuel, traffic, countdowns, crashes or failure penalties. Every activity can be replayed; collected postcards remain.
+
+**Grown-ups:** pause for audio, always-open quiet camp, voice controls, source/representation notes and optional reset. Existing Muhammadiyah prayer and four-surah learning remain unchanged and never award points, earn postcards or gate exploration. Optional Juz Amma still requires an explicit tap and pauses for narration, activities, learning, menus and hidden tabs. No background music, combat, crime, weapons, enemies, purchases or ads.
+
+Wonder activities, postcards, replay variation, voice setting and position save only in this browser under a separate key; old dinosaur progress is preserved. No names, birthdays, microphone access, accounts, analytics or server-side saves. Static scenery is merged by material for lighter rendering. Local Three.js and all models are bundled; no runtime graphics CDN, build step or generated image downloads.
+
+## Dinosaur island is still here
+
+### [Play the 3D dinosaur island](https://handysatria1.github.io/dino-desert-quest/island.html)
 
 A gentle, active browser adventure for little explorers, designed around ages 5–6.
 
@@ -26,7 +52,7 @@ Tap Pip’s face for the next step and a safe walking route. The map covers both
 
 **Computer:** arrows/WASD to move, Space to hop, E to interact, Escape to pause.
 
-The homepage’s Play button opens the island. The [original illustrated Dino & Desert Quest](https://handysatria1.github.io/dino-desert-quest/play.html) remains available, including its Egypt adventure.
+The homepage’s Play button opens Wonder World. Its picture menu also leads to Dinosaur Island. The [original illustrated Dino & Desert Quest](https://handysatria1.github.io/dino-desert-quest/play.html) remains available, including its Egypt adventure.
 
 ### Quiet learning and optional recitation
 
