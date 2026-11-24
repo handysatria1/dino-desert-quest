@@ -44,6 +44,16 @@
     box(shell, sand, 0, 3, -10, 25, 6, .7);
     box(shell, sand, -12, .65, 0, .7, 1.3, 20);
     box(shell, sand, 12, .65, 0, .7, 1.3, 20);
+    // Enclosed at eye level; the overhead accessibility view can lift these away.
+    const enclosure = group(0, 0, 0, shell);
+    for (const x of [-12, 12]) box(enclosure, sand, x, 4.3, 0, .7, 6, 20);
+    for (const x of [-7.2, 7.2]) box(enclosure, sand, x, 3.6, 10, 10.1, 7.2, .7);
+    box(enclosure, sand, 0, 6.4, 10, 4.4, 1.6, .7);
+    box(enclosure, place.id === 'rio' ? '#a9956d' : '#e9daba', 0, 7.5, 0, 25, .4, 21);
+    for (const x of [-8, 0, 8]) {
+      box(enclosure, '#c7b68d', x, 7.15, 0, .3, .35, 20);
+      box(enclosure, '#f8edc9', x, 6.95, -1, 1.7, .12, 2.7);
+    }
     for (const x of [-11, 11]) for (const z of [-9, 8]) cylinder(shell, sand, x, 3.2, z, .35, .5, 6.4, 8);
     for (let x = -10; x <= 10; x += 2) for (let z = -8; z <= 8; z += 2) {
       if ((x + z) % 4 === 0) box(shell, place.id === 'taj' ? '#9cbdb2' : '#d8c9a4', x, .065, z, 1.9, .04, 1.9);
@@ -109,7 +119,8 @@
       for (const x of [-.3, .3]) ball(c, '#efe7c8', x, 2.65, 0, .22, .3, .22);
       for (const x of [-8, 0, 8]) windowView(group(x, 0, -9.3, shell), true);
     }
-    return { ...data, scene, hotspots, blocks, exit: { x: 0, z: 7.5, icon: '🚪', verb: 'OUT', text: 'Go back outside' } };
+    scene.updateMatrixWorld(true);
+    return { ...data, scene, hotspots, blocks, enclosure, occluders: [shell, exhibits], exit: { x: 0, z: 7.5, icon: '🚪', verb: 'OUT', text: 'Go back outside' } };
   }
   window.WonderInteriors = Object.freeze({ build });
 })();

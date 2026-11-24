@@ -4,13 +4,25 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
-### New: go inside and take the driver’s seat
+### Immersive 3D exploration · Android-friendly browser play
 
-**Walk inside:** tap the doorway picture at a destination to find the entrance, then tap **Enter**. Explore a bright, roof-cutaway room, walk up to models and tap **Look** to hear about what you see. Pip can guide you to each discovery; the **Out** picture always takes you straight outside. There are seven different rooms and 21 architectural/nature discoveries: a watchtower, sandstone hall, pattern hall, arch walkway, visitor discovery room, stone house and forest lodge.
+Play from **behind your explorer**, not just above a miniature park. Swipe the world to turn and look around; use the movement circle with your other thumb. Your explorer walks in the directions the camera is facing. Tap the camera picture for the simpler bird’s-eye view whenever you want. Short floor taps and Pip’s guided routes still work. Keyboard: WASD/arrows move, mouse drag looks, V changes camera, C looks ahead.
+
+The park now has almost twice its former ground area, wider-spaced districts, taller landmark models, extra trees, distant island mountains and a cloud horizon. Follow-camera collision helps keep the view in front of walls. No head bob or camera shake. Graphics are bundled and lightweight; picture travel remains instant so longer distances never become a requirement.
+
+**Walk through doors:** on foot, walk straight into the bright doorway to go inside. Rooms have ceilings and enclosing walls at eye level. Walk back through the doorway to leave, or use the always-available Out picture. Overhead mode opens the roofs and near walls so the child can see clearly. Enter/Out buttons remain as an alternative to walking thresholds.
+
+Driving keeps the actual cockpit view and now offers a third-person chase camera. Swipe inside the car to glance around; the view gently returns forward when driving. Old discoveries and postcards remain saved; old positions migrate safely to the expanded park. Religious learning and dinosaur saves are unchanged.
+
+This version runs in a WebGL-capable Android browser such as Chrome. **It is not a native Android APK.** Performance depends on the tablet; an installable Android build can be considered separately if needed.
+
+### Go inside and take the driver’s seat
+
+**Walk inside:** tap the doorway picture at a destination to find the entrance, then tap **Enter**, or simply walk through it on foot. Explore a bright room, walk up to models and tap **Look** to hear about what you see. Pip can guide you to each discovery; the **Out** picture always takes you straight outside. There are seven different rooms and 21 architectural/nature discoveries: a watchtower, sandstone hall, pattern hall, arch walkway, visitor discovery room, stone house and forest lodge.
 
 These are **fictional educational rooms**, not reconstructions of actual monument interiors or promises of real-world access. The Chichén Itzá room is a pretend visitor learning space, not a passage into the pyramid. Corcovado has an imaginary forest lodge, not a statue interior. No religious figures or tomb contents are depicted. Indoor exploring does not award rewards or change outdoor activity progress. Reloading safely returns outside; the buggy waits where it was parked.
 
-**Drive from inside the car:** getting in opens a true perspective view from the buggy’s driver seat, showing the 3D steering wheel, dashboard, pillars and road ahead. Push up to go, left/right to steer, down to reverse. Moving sideways alone gives a gentle forward turn. Tap the camera picture for the original overhead view, or footprints to get out. No camera shake, head bob or driving jumps. Controls work on tablet and keyboard.
+**Drive from inside the car:** getting in opens a true perspective view from the buggy’s driver seat, showing the 3D steering wheel, dashboard, pillars and road ahead. Push up to go, left/right to steer, down to reverse. Moving sideways alone gives a gentle forward turn. Tap the camera picture for the third-person chase view, or footprints to get out. No camera shake, head bob or driving jumps. Controls work on tablet and keyboard.
 
 ### Explore the New Seven Wonders
 
