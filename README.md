@@ -4,9 +4,21 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
-### Pip’s brain games · new
+### New: letter hunt, brain games and sticker book
 
-Open **🧠 Brain games** from the globe or the pause menu. Five gentle games for ages 5–6, each with a spoken prompt and no timers, lives or wrong-answer penalties: counting stars, what comes next in a pattern, copying Pip’s colour memory, starting sounds, and adding pictures. Each game gets harder as your child solves more rounds (three levels). Stars save only in this browser.
+**🎈 Letter hunt:** 26 letter balloons float around the park, A to Z. Walk or drive through one to hear the letter and a word that starts with it (“B is for ball”). Tap the globe, then **Find a letter**, and Pip guides you to the next letter in alphabet order.
+
+**🧠 Brain games:** open from the globe or pause menu. Ten gentle games for ages 5–6, all spoken aloud, with no timers, lives or penalties:
+
+| Area | Games |
+| --- | --- |
+| Numbers | Count the stars · Add the pictures · More or less? |
+| Letters | Starting sounds · Build a word (spell *cat*, *frog*, *star*…) |
+| Thinking | What comes next? · Pip’s colour memory · Odd one out |
+| Shapes | Shape detective (names, then counting sides) |
+| World | Wonder quiz (match the seven wonders to pictures and countries) |
+
+Each game levels up as your child solves more (three levels). Every solved puzzle and every letter balloon earns a ⭐; each ten stars unlock a sticker in the 20-sticker book. Stars and letters save only in this browser.
 
 ### Immersive 3D exploration · Android-friendly browser play
 

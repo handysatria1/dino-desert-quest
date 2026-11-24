@@ -95,7 +95,7 @@
   const key = 'little-explorer-wonder-world-v1'; let stored = {}, storageOK = true;
   try { const raw = JSON.parse(localStorage.getItem(key) || '{}'); if (raw && typeof raw === 'object') stored = raw; } catch { storageOK = false; }
   const ids = places.map(p => p.id), allowed = a => [...new Set(Array.isArray(a) ? a.filter(id => ids.includes(id)) : [])];
-  const state = { progress: {}, rounds: {}, completed: allowed(stored.completed), visited: allowed(stored.visited), voice: stored.voice !== false };
+  const state = { progress: {}, rounds: {}, completed: allowed(stored.completed), visited: allowed(stored.visited), voice: stored.voice !== false, letters: Array.isArray(stored.letters) ? [...new Set(stored.letters.filter(c => typeof c === 'string' && /^[A-Z]$/.test(c)))] : [] };
   places.forEach(p => { const n = stored.progress?.[p.id], r = stored.rounds?.[p.id]; state.progress[p.id] = Number.isInteger(n) ? Math.max(0, Math.min(p.total, n)) : 0; state.rounds[p.id] = Number.isInteger(r) ? Math.max(0, Math.min(999, r)) : 0; if (state.progress[p.id] === p.total && !state.completed.includes(p.id)) state.completed.push(p.id); });
   const position = new T.Vector3(0, 0, 21), carPosition = new T.Vector3(4, 0, 20);
   const blockers = places.map(p => ({ x: p.x, z: p.z - 6, w: p.id === 'wall' ? 22 : 17, d: 12 }));
@@ -217,6 +217,42 @@
   const arrow = mesh(scene, new T.ConeGeometry(.65, 1.2, 3), '#f3c158', 0, 4.5, 0); arrow.rotation.z = Math.PI;
   const trail = Array.from({ length: 15 }, () => disk(scene, '#fff3c1', 0, 0, .15, .45));
   const sparkles = Array.from({ length: 18 }, (_, i) => { const model = ball(scene, i % 2 ? '#fff0ae' : '#a2d7c6', 0, 0, 0, .12); model.visible = false; return { model, life: 0, vx: 0, vy: 0, vz: 0 }; });
+  // Letter hunt: 26 floating letter balloons hidden around the park, collected by walking or driving through them.
+  const LETTER_WORDS = { A: 'apple', B: 'ball', C: 'cat', D: 'dog', E: 'egg', F: 'fish', G: 'goat', H: 'hat', I: 'igloo', J: 'jam', K: 'kite', L: 'lion', M: 'moon', N: 'nest', O: 'octopus', P: 'pig', Q: 'queen', R: 'rabbit', S: 'sun', T: 'tree', U: 'umbrella', V: 'van', W: 'whale', X: 'box', Y: 'yo-yo', Z: 'zebra' };
+  const balloonColours = ['#e58d7a', '#edc75f', '#7cb6c3', '#9fcf86', '#c8a3dc', '#f0a8bf'];
+  const letterBalloons = Object.keys(LETTER_WORDS).map((L, i) => {
+    const a = i * 2.39996 + .6, r = 34 + (i * 37 % 120), spot = safePoint(Math.cos(a) * r, Math.sin(a) * r);
+    const g = group(spot.x, 0, spot.z), colour = balloonColours[i % balloonColours.length];
+    const b = ball(g, colour, 0, 4.2, 0, 1.15, 1.35, 1.15); b.castShadow = false;
+    segment(g, '#f4ecd2', [0, 2.85, 0], [0, .3, 0], .04);
+    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+    x.fillStyle = '#fffdf3'; x.beginPath(); x.arc(64, 64, 60, 0, Math.PI * 2); x.fill(); x.lineWidth = 8; x.strokeStyle = colour; x.stroke();
+    x.fillStyle = '#244f43'; x.font = 'bold 84px Trebuchet MS, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(L, 64, 70);
+    const tex = new T.CanvasTexture(c); tex.colorSpace = T.SRGBColorSpace;
+    const label = new T.Sprite(new T.SpriteMaterial({ map: tex })); label.position.set(0, 4.3, 0); label.scale.set(2.2, 2.2, 1); g.add(label);
+    return { letter: L, model: g, x: spot.x, z: spot.z, phase: i * .7 };
+  });
+  const lettersFound = () => letterBalloons.filter(b => state.letters.includes(b.letter)).length;
+  const nextLetter = () => letterBalloons.find(b => !state.letters.includes(b.letter));
+  function syncLetters() { letterBalloons.forEach(b => { b.model.visible = !state.letters.includes(b.letter); }); }
+  function updateLetters(dt) {
+    letterBalloons.forEach(b => {
+      if (!b.model.visible) return;
+      b.model.position.y = reduced ? 0 : Math.sin(time * 1.6 + b.phase) * .35;
+      if (Math.hypot(position.x - b.x, position.z - b.z) > (riding ? 4 : 2.8)) return;
+      state.letters.push(b.letter); b.model.visible = false; window.BrainGames?.addStars(1);
+      if (!reduced) sparkles.forEach((s, i) => { const a = i * 2.4; s.model.visible = true; s.model.position.set(b.x, 3, b.z); s.life = 1.2; s.vx = Math.cos(a) * 2; s.vz = Math.sin(a) * 2; s.vy = 2.5 + i % 3; });
+      const n = lettersFound(), w = LETTER_WORDS[b.letter], nx = nextLetter();
+      toast(`🎈 ${b.letter} · ${n} of 26 letters`);
+      say(b.letter === 'X' ? `X! You can hear X at the end of box. You found ${n} of 26 letters.` : `${b.letter}! ${b.letter} is for ${w}. You found ${n} of 26 letters.${n === 26 ? ' You found the whole alphabet! Amazing explorer!' : nx ? ` Can you find ${nx.letter} next?` : ''}`);
+      updateHUD(); save();
+    });
+  }
+  function letterHunt() {
+    const b = nextLetter();
+    if (!b) { setMode('play'); say('You already found all 26 letters! A, B, C, all the way to Z. Brilliant!'); return; }
+    leaveInterior(false); go({ x: b.x, z: b.z, text: `Let’s find the letter ${b.letter}. ${b.letter} is for ${LETTER_WORDS[b.letter]}` });
+  }
 
   function doorway(p) { return { x: p.x, z: p.z + 8.5, icon: '🚪', verb: 'ENTER', text: `Go inside ${p.name}`, kind: 'enter' }; }
   function interiorGoal() {
@@ -314,7 +350,7 @@
     refreshView();
     $('#place-title small').textContent = interior ? 'PRETEND LEARNING ROOM' : 'LITTLE EXPLORER';
     $('#place-title strong').textContent = interior ? interior.name : currentPlace ? currentPlace.name : 'Wonder World';
-    const g = playGoal() || { icon: '🚙', text: 'Drive, explore, or tap the globe!' };
+    const g = playGoal() || (nextLetter() ? { icon: '🎈', text: `Find letter balloons · ${lettersFound()} of 26` } : { icon: '🚙', text: 'Drive, explore, or tap the globe!' });
     $('#task-icon').textContent = g.icon; $('#task-title').textContent = g.text;
     $('#task-dots').innerHTML = interior ? interior.hotspots.map(h => `<i class="${h.seen ? 'done' : ''}"></i>`).join('') : currentPlace ? Array.from({ length: currentPlace.total }, (_, i) => `<i class="${i < step(currentPlace) ? 'done' : ''}"></i>`).join('') : '';
     $('#task-dots').setAttribute('aria-label', interior ? `${interior.hotspots.filter(h => h.seen).length} of ${interior.hotspots.length} things explored` : currentPlace ? `${step(currentPlace)} of ${currentPlace.total} steps` : 'All destinations are open');
@@ -364,7 +400,7 @@
   }
   function travelMenu() {
     setMode('travel');
-    overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="travel-title">${closeButton()}<small>EVERY PLACE IS OPEN</small><h2 id="travel-title">Where shall we go?</h2><p>Tap a picture. Hear its name. Go exploring!</p><div class="travel-grid">${places.map(p => `<button class="travel-card ${currentPlace?.id === p.id ? 'active' : ''}" data-act="visit" data-place="${p.id}" aria-label="Explore ${p.name}, ${p.country}">${catalog.picture(p.id)}<strong>${p.name}</strong><small>${p.country}</small>${state.completed.includes(p.id) ? '<span class="stamp" aria-label="Explored">✓</span>' : ''}</button>`).join('')}<button class="travel-card" data-act="home" aria-label="Go to the home garden and buggy">${catalog.picture('home')}<strong>Home garden</strong><small>Buggy · ball · quiet camp</small></button></div><div class="passport" aria-label="${state.completed.length} of seven places explored">${places.map(p => `<i class="${state.completed.includes(p.id) ? 'done' : ''}" title="${p.name}">${state.completed.includes(p.id) ? '✓' : '·'}</i>`).join('')}</div><div class="buttons"><button data-act="brain">🧠 Brain games</button><button data-act="island">🦕 Dinosaur island</button><button data-act="camp">☾ Quiet camp</button></div><p class="fine">An imaginary explorer park with miniature landmarks, not a real-world map. All activities use pretend gardens, paths and building models.</p></section>`;
+    overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="travel-title">${closeButton()}<small>EVERY PLACE IS OPEN</small><h2 id="travel-title">Where shall we go?</h2><p>Tap a picture. Hear its name. Go exploring!</p><div class="travel-grid">${places.map(p => `<button class="travel-card ${currentPlace?.id === p.id ? 'active' : ''}" data-act="visit" data-place="${p.id}" aria-label="Explore ${p.name}, ${p.country}">${catalog.picture(p.id)}<strong>${p.name}</strong><small>${p.country}</small>${state.completed.includes(p.id) ? '<span class="stamp" aria-label="Explored">✓</span>' : ''}</button>`).join('')}<button class="travel-card" data-act="home" aria-label="Go to the home garden and buggy">${catalog.picture('home')}<strong>Home garden</strong><small>Buggy · ball · quiet camp</small></button></div><div class="passport" aria-label="${state.completed.length} of seven places explored">${places.map(p => `<i class="${state.completed.includes(p.id) ? 'done' : ''}" title="${p.name}">${state.completed.includes(p.id) ? '✓' : '·'}</i>`).join('')}</div><p class="letter-count">🎈 Letters found: <b>${lettersFound()} of 26</b></p><div class="buttons"><button data-act="letters">🎈 Find a letter</button><button data-act="brain">🧠 Brain games</button><button data-act="island">🦕 Dinosaur island</button><button data-act="camp">☾ Quiet camp</button></div><p class="fine">An imaginary explorer park with miniature landmarks, not a real-world map. All activities use pretend gardens, paths and building models.</p></section>`;
     focusCard(); speak('Where shall we go? Tap a big picture to visit a wonder. Every place is open.');
   }
   function home() { leaveInterior(false); entranceIntent = false; position.set(0, 0, 21); carPosition.set(4, 0, 20); riding = false; speed = 0; heading = Math.PI; resetCamera(); currentPlace = null; setMode('play'); camFocus.copy(position); resize(); updateHUD(); save(); say('Home again! Your little buggy is waiting. Swipe the world to look around, or choose another picture on the globe.'); }
@@ -375,7 +411,7 @@
   function notes() {
     setMode('notes');
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="notes-title">${closeButton('pause')}<small>FOR YOUR GROWN-UP</small><h2 id="notes-title">Freedom to explore. Space to learn.</h2><p>A gentle open-world explorer park for ages 5–6. The child’s screen has a picture globe, movement joystick, hop, one changing action button, and Pip’s spoken help. No independent reading is required; device English speech availability varies.</p><p>Walk or drive the electric pretend buggy between seven miniature wonder districts, or use picture travel. Arrow keys/WASD move, Space hops, E interacts, Escape pauses. Tap the ground to walk; tap Pip to follow a safe route to the next activity. There are no enemies, crime, weapons, traffic collisions, timers, lost lives, purchases, ads, accounts, music or microphone access.</p><div class="site-facts"><strong>The New Seven Wonders</strong><p>Great Wall, Petra, Taj Mahal, Colosseum, Chichén Itzá, Machu Picchu, and the Christ the Redeemer site on Corcovado. To respect the family’s request not to depict prophets, Brazil is represented by the mountain, forest and viewpoint, without the statue or any religious figure.</p><p>These are stylised, reduced-scale, imaginary park replicas, not historical reconstructions or geographical neighbours. Children garden and build on pretend activity grounds, never on the actual protected monuments. All seven destinations are open immediately; stamps celebrate exploration, not tests.</p></div><p>Quiet camp is always open, retaining the existing parent-guided Muhammadiyah prayer sequence and four surahs. Religious learning gives no game rewards and unlocks nothing. Review religious material with a qualified teacher. No depictions of Allah or prophets.</p><p>Optional Juz Amma uses the existing community-attributed Muzammil Hasballah stream; it is not independently authenticated as an official release. Internet is needed for audio. Playback pauses for narration, menus, learning and hidden tabs. Nothing streams before an explicit Start tap.</p><p>Saved on this browser: site activity steps, completed postcards, replay variations, voice setting and explorer position. No name, age or birthday is stored. Original dinosaur discoveries remain in their separate save. ${storageOK ? '' : '<strong>Storage is unavailable: this visit remains playable but cannot be saved.</strong>'}</p><div class="buttons"><button data-act="voice" aria-pressed="${state.voice}">🔊 English voice: ${state.voice ? 'on' : 'off'}</button><button data-act="fullscreen">Full screen</button><button data-act="reset">Reset wonder activities</button></div><p class="fine">Local procedural art · Three.js 0.160.1 · <a href="vendor/THREE-LICENSE.txt">MIT licence</a> · <a href="play.html">Original illustrated adventure</a>.</p></section>`; focusCard();
-    overlay.querySelector('.site-facts').insertAdjacentHTML('beforeend', '<p><strong>New: immersive 3D exploration.</strong> The default is a perspective camera following behind the explorer. Swipe an empty part of the world to turn and look up or down; use the movement circle with your other thumb. Walking follows camera directions. A short tap on the floor still walks there. The camera picture switches between close exploration and the original overhead accessibility view. On a keyboard, V changes camera and C looks ahead. There is no camera shake or head bob. Camera collision pulls the view in before walls; ceiling and near walls lift away in overhead mode.</p><p>The park has nearly twice the previous ground area, with districts 40% further apart, taller landmarks, a mountain-island horizon and more trees. A simple path still joins every destination, and picture travel remains instant. Existing activity progress is preserved; older positions are safely migrated into the expanded layout. Android Chrome is supported through the browser; this release is not a native APK.</p><p><strong>Walk through the doorway.</strong> On foot, walk into a bright doorway to enter and back through the room doorway to exit. The doorway picture and Enter/Out buttons remain available as accessible alternatives. Each destination has a bright enclosed learning room with three inspectable models. These are fictional rooms inspired by architecture and materials, not authenticated monument interiors. Chichén Itzá uses a pretend visitor discovery room; Corcovado uses an imaginary forest lodge, without a statue or religious figure. Indoor discoveries give no rewards and do not change outdoor activity progress. Indoor position is never saved: reloading safely returns outside.</p><p>The buggy opens in a true perspective driver-seat view with a 3D steering wheel and dashboard. Up drives, left/right steers, down reverses; sideways-only input gently rolls forward while turning. The camera picture switches to a third-person chase view. Swipe to glance around inside the car; the view gently returns forward while moving. No driving hops. Tap footprints to get out.</p>');
+    overlay.querySelector('.site-facts').insertAdjacentHTML('beforeend', '<p><strong>New: immersive 3D exploration.</strong> The default is a perspective camera following behind the explorer. Swipe an empty part of the world to turn and look up or down; use the movement circle with your other thumb. Walking follows camera directions. A short tap on the floor still walks there. The camera picture switches between close exploration and the original overhead accessibility view. On a keyboard, V changes camera and C looks ahead. There is no camera shake or head bob. Camera collision pulls the view in before walls; ceiling and near walls lift away in overhead mode.</p><p>The park has nearly twice the previous ground area, with districts 40% further apart, taller landmarks, a mountain-island horizon and more trees. A simple path still joins every destination, and picture travel remains instant. Existing activity progress is preserved; older positions are safely migrated into the expanded layout. Android Chrome is supported through the browser; this release is not a native APK.</p><p><strong>New: letter hunt and brain games.</strong> Twenty-six letter balloons float around the park; walking or driving through one says the letter and a word that starts with it, and adds a star. “Find a letter” on the globe menu guides your child to the next letter in alphabet order. Brain games (globe or pause menu) offer ten short activities in numbers, letters, thinking, shapes and the seven wonders. Each game levels up as your child solves more, and every ten stars unlocks a sticker. There are no timers, lives or penalties; a wrong tap just gets a gentle hint.</p><p><strong>Walk through the doorway.</strong> On foot, walk into a bright doorway to enter and back through the room doorway to exit. The doorway picture and Enter/Out buttons remain available as accessible alternatives. Each destination has a bright enclosed learning room with three inspectable models. These are fictional rooms inspired by architecture and materials, not authenticated monument interiors. Chichén Itzá uses a pretend visitor discovery room; Corcovado uses an imaginary forest lodge, without a statue or religious figure. Indoor discoveries give no rewards and do not change outdoor activity progress. Indoor position is never saved: reloading safely returns outside.</p><p>The buggy opens in a true perspective driver-seat view with a 3D steering wheel and dashboard. Up drives, left/right steers, down reverses; sideways-only input gently rolls forward while turning. The camera picture switches to a third-person chase view. Swipe to glance around inside the car; the view gently returns forward while moving. No driving hops. Tap footprints to get out.</p>');
   }
   function openBrain() { if (!window.BrainGames) return; window.BrainGames.open({ overlay, speak, start: () => setMode('brain'), exit: () => setMode('play') }); }
   function campMenu() {
@@ -534,7 +570,7 @@
       carried.position.set(position.x, riding ? 3.8 : 2.5, position.z - .8);
       const found = interior ? currentPlace : places.find(p => Math.hypot(position.x - p.x, position.z - p.z) < 34) || null;
       if (found?.id !== currentPlace?.id) { currentPlace = found; entranceIntent = false; resize(); updateHUD(); syncModels(); if (found) visitMessage(found); }
-      if (!interior) updateActivities(dt);
+      if (!interior) { updateActivities(dt); updateLetters(dt); }
       nearest = nearby(); updateAction();
       const dx = beachBall.position.x - position.x, dz = beachBall.position.z - position.z, d = Math.hypot(dx, dz);
       if (!interior && moving && d < (riding ? 2.7 : 1.7)) ballVelocity.set(dx / Math.max(.1, d), 0, dz / Math.max(.1, d)).multiplyScalar(riding ? 16 : 10);
@@ -635,14 +671,14 @@
   overlay.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
     if (a === 'start') start(); else if (a === 'resume') setMode('play'); else if (a === 'travel') travelMenu(); else if (a === 'visit') fastTravel(b.dataset.place);
-    else if (a === 'brain') openBrain(); else if (a === 'home') home(); else if (a === 'pause') pause(); else if (a === 'notes') notes(); else if (a === 'camp') campMenu(); else if (a === 'island') islandPrompt();
+    else if (a === 'brain') openBrain(); else if (a === 'letters') letterHunt(); else if (a === 'home') home(); else if (a === 'pause') pause(); else if (a === 'notes') notes(); else if (a === 'camp') campMenu(); else if (a === 'island') islandPrompt();
     else if (a === 'leave-island') { save(); window.Recitation?.stop(); location.href = 'island.html'; }
     else if (a === 'audio') window.Recitation?.open(); else if (['prayer', 'quran'].includes(a)) learn(a);
     else if (a === 'voice') { state.voice = !state.voice; save(); notes(); }
     else if (a === 'fullscreen') { if (document.fullscreenElement) document.exitFullscreen?.(); else root.requestFullscreen?.().catch(() => {}); }
     else if (a === 'reset') {
       if (!confirm('Reset only wonder-world activities? Dinosaur discoveries and learning guides will stay unchanged.')) return;
-      places.forEach(p => { state.progress[p.id] = state.rounds[p.id] = 0; }); state.completed = []; state.visited = []; syncModels(); save(); notes();
+      places.forEach(p => { state.progress[p.id] = state.rounds[p.id] = 0; }); state.completed = []; state.visited = []; state.letters = []; syncLetters(); syncModels(); save(); notes();
     }
   });
   document.addEventListener('keydown', e => {
@@ -651,7 +687,7 @@
     if (e.shiftKey && (document.activeElement === first || !items.includes(document.activeElement))) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && (document.activeElement === last || !items.includes(document.activeElement))) { e.preventDefault(); first.focus(); }
   });
-  syncModels(); resize(); resetCamera(); setMode('title');
+  syncLetters(); syncModels(); resize(); resetCamera(); setMode('title');
   overlay.innerHTML = `<section class="card title-card"><span class="title-icon" aria-hidden="true">🌍</span><small>STEP INTO YOUR OWN 3D ADVENTURE</small><h1>Pip’s<br>Wonder World.</h1><p>Look around. Walk inside.<br>Drive to seven amazing places.</p><div class="buttons"><button id="start" data-act="start">▶ PLAY</button></div><p class="fine">No enemies. No hurry. Pip will show you how.</p></section>`;
   requestAnimationFrame(frame);
 })();
