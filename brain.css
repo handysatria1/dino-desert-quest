@@ -23,3 +23,20 @@
 .brain-tile span{font-size:52px}
 .brain-tile.lit,.brain-tile:not(:disabled):hover{opacity:1;transform:scale(1.05)}
 .brain-tile:disabled{cursor:default}
+.brain-group{margin:18px 0 4px;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:#6a7f63;text-align:left}
+.brain-book{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px auto;max-width:640px}
+.brain-book span{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#efe7cf;font-size:24px;color:#b9ad8c;font-weight:800}
+.brain-book span.got{background:#fff3c1;box-shadow:0 0 0 2px #e8c862 inset}
+.brain-next{font-weight:700;margin:6px 0}
+.brain-sticker{font-size:40px;vertical-align:middle}
+.brain-choice .dots{font-size:14px;letter-spacing:1px;color:#6a7f63;max-width:120px;line-height:1.1}
+.brain-shape{width:clamp(70px,13vw,104px);height:auto}
+.brain-pic svg{width:clamp(110px,22vw,170px);height:auto;display:block}
+.big-pic{display:flex;justify-content:center}
+.big-pic svg{width:clamp(160px,34vw,240px)}
+.brain-slots{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.brain-slots span{width:64px;height:72px;border-bottom:5px solid #c5b98f;display:grid;place-items:center;font-size:46px;font-weight:900;color:#355c45;background:#fffdf3;border-radius:12px 12px 0 0}
+.brain-slots span.filled{background:#e5f3cf;border-color:#6f9d4f}
+.brain-key{min-width:84px;min-height:84px;font-size:40px}
+.brain-key:disabled{opacity:.3}
+.letter-count{text-align:center;font-weight:700;margin:12px 0 0}
