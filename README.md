@@ -4,6 +4,10 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
+### Pip’s brain games · new
+
+Open **🧠 Brain games** from the globe or the pause menu. Five gentle games for ages 5–6, each with a spoken prompt and no timers, lives or wrong-answer penalties: counting stars, what comes next in a pattern, copying Pip’s colour memory, starting sounds, and adding pictures. Each game gets harder as your child solves more rounds (three levels). Stars save only in this browser.
+
 ### Immersive 3D exploration · Android-friendly browser play
 
 Play from **behind your explorer**, not just above a miniature park. Swipe the world to turn and look around; use the movement circle with your other thumb. Your explorer walks in the directions the camera is facing. Tap the camera picture for the simpler bird’s-eye view whenever you want. Short floor taps and Pip’s guided routes still work. Keyboard: WASD/arrows move, mouse drag looks, V changes camera, C looks ahead.
