@@ -24,7 +24,7 @@
   ];
   // Short words with regular spelling, then four-letter words.
   const SPELL = [
-    [{ word: 'cat', icon: '🐱' }, { word: 'dog', icon: '🐶' }, { word: 'sun', icon: '🌞' }, { word: 'hat', icon: '🎩' }, { word: 'bus', icon: '🚌' }, { word: 'pig', icon: '🐷' }, { word: 'fox', icon: '🦊' }, { word: 'cup', icon: '🥤' }, { word: 'bed', icon: '🛏️' }, { word: 'egg', icon: '🥚' }],
+    [{ word: 'cat', icon: '🐱' }, { word: 'dog', icon: '🐶' }, { word: 'sun', icon: '🌞' }, { word: 'hat', icon: '🎩' }, { word: 'bus', icon: '🚌' }, { word: 'ant', icon: '🐜' }, { word: 'fox', icon: '🦊' }, { word: 'cup', icon: '🥤' }, { word: 'bed', icon: '🛏️' }, { word: 'egg', icon: '🥚' }],
     [{ word: 'fish', icon: '🐟' }, { word: 'frog', icon: '🐸' }, { word: 'star', icon: '⭐' }, { word: 'duck', icon: '🦆' }, { word: 'cake', icon: '🎂' }, { word: 'tree', icon: '🌳' }, { word: 'moon', icon: '🌙' }, { word: 'ship', icon: '🚢' }, { word: 'bear', icon: '🐻' }, { word: 'kite', icon: '🪁' }]
   ];
   const ODD = {
@@ -216,7 +216,7 @@
 
   // Returns a new sticker when this star completes a page of ten.
   function gain(id) {
-    const before = stickerCount(); state.stars++; state.played[id]++; save();
+    const before = stickerCount(); state.stars++; state.played[id]++; save(); window.dispatchEvent(new CustomEvent('little-explorer:event', { detail: { type: 'puzzle' } }));
     const after = stickerCount(); if (after > before) { const s = STICKERS[after - 1]; game?.stickers.push(s); return s; }
     return null;
   }

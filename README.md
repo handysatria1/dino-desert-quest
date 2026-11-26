@@ -4,6 +4,19 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
+### New: Pip’s adventure board
+
+Tap the 🌍 globe (or pause), then **🎪 Adventures**. Every adventure has a “take me there” button, and Pip speaks every step.
+
+| Adventure | What your child does | What they practise |
+| --- | --- | --- |
+| 🐣 Animal rescue | Find 10 lost baby animals around the park. Each follows in a line; lead them home to their mums at the farm. | Animal and baby names (lamb/sheep, foal/horse…), counting the line home |
+| 🏁 Number race | Drive through 10 numbered rings in order. Level 1 counts to 10, level 2 counts in twos, level 3 counts back from 10. Best times are kept. | Number order, skip counting, counting back |
+| 🥕 Garden | Fill the watering can at the pump, plant six crops, water them twice, watch them grow, and pick the harvest. | How plants grow, counting, plural words |
+| 🧰 Treasure chests | Six chests near the edge of the park, each marked with a shape. | Shape names; each chest unlocks a hat or buggy paint |
+| 👑 Wardrobe | Wear a party hat, crown, wizard hat, flower crown or space helmet; paint the buggy. | Rewards from chests, stars and trophies |
+| ✅ Daily missions | Three new missions every day (e.g. “Pick 6 things in the garden”). Finishing all three earns a trophy and a fireworks show. | A reason to come back and try everything |
+
 ### New: letter hunt, brain games and sticker book
 
 **🎈 Letter hunt:** 26 letter balloons float around the park, A to Z. Walk or drive through one to hear the letter and a word that starts with it (“B is for ball”). Tap the globe, then **Find a letter**, and Pip guides you to the next letter in alphabet order.
