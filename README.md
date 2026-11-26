@@ -4,6 +4,16 @@
 
 A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
 
+### New: rides, the sea and a fresh look
+
+- **Prettier world:** a soft sky with a sun, a moving sea with waves and foam, natural colour in the grass and paths, smoother shapes, and thousands of flowers, bushes, grass tufts and rocks.
+- **🏖️ Beach:** walk down the sand into the shallow water, past palm trees, umbrellas and a sandcastle. Eight seashells to find (they wash up again).
+- **⛵ Sailing:** walk to the end of the dock and tap **SAIL**. Sail around the island to the lighthouse, past a pod of jumping dolphins, then back to the dock.
+- **🐴 Horse riding:** tap **RIDE** next to the horse at the stable. It gallops; tap **HOP** to jump the five fences in order.
+- **🏎️ Grand Prix:** drive the buggy to the start line on the race track for a 3-2-1 countdown and three laps against Fox, Panda and Bunny. Gold, silver and bronze cups are kept. Rivals ease off when your child is ahead, so steady driving wins.
+
+All of these are on the 🎪 Adventures board, and count towards daily missions.
+
 ### New: Pip’s adventure board
 
 Tap the 🌍 globe (or pause), then **🎪 Adventures**. Every adventure has a “take me there” button, and Pip speaks every step.

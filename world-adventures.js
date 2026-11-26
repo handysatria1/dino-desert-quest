@@ -57,7 +57,11 @@
     puzzle: { icon: '🧠', text: n => `Solve ${n} brain puzzles`, n: 5 },
     chest: { icon: '🧰', text: () => 'Open a treasure chest', n: 1 },
     wonder: { icon: '🌍', text: n => `Help at a wonder ${n} times`, n: 3 },
-    fruit: { icon: '💧', text: n => `Water plants ${n} times`, n: 4 }
+    fruit: { icon: '💧', text: n => `Water plants ${n} times`, n: 4 },
+    gp: { icon: '🏎️', text: () => 'Race in the Grand Prix', n: 1 },
+    jump: { icon: '🐴', text: n => `Jump ${n} fences on the horse`, n: 3 },
+    sea: { icon: '⛵', text: () => 'Sail to the lighthouse', n: 1 },
+    shell: { icon: '🐚', text: n => `Find ${n} seashells`, n: 4 }
   };
 
   let saved = {};
@@ -289,6 +293,7 @@
   // Pip’s guidance: the world asks for this when there is no wonder activity nearby.
   function goal() {
     if (!ready) return null;
+    const ride = window.Rides?.goal(); if (ride) return ride;
     if (followers.length) return { icon: '🐣', text: `Take ${followers.length} ${followers.length > 1 ? 'babies' : 'baby'} to the farm`, x: FARM.x, z: FARM.z };
     if (race.active) { const r = rings[race.next]; return { icon: '🏁', text: `Number race: find ${raceSequence(race.level)[race.next]}`, x: r.x, z: r.z }; }
     if (water > 0) { const p = patches.find(p => p.stage === 1 || p.stage === 3); if (p) return { icon: '💧', text: `Water the ${p.crop.one} (${water} left)`, x: p.x, z: p.z }; }
@@ -332,9 +337,10 @@
 
     // Number race.
     rings.forEach((r, i) => { r.ring.rotation.z = api.reduced ? 0 : Math.sin(t * 1.5 + i) * .05; });
+    if (window.Rides?.busy() && race.active) { race.active = false; highlightRings(); }
     if (race.active && !near(RACE.x, RACE.z, 55)) { race.active = false; race.warned = -1; highlightRings(); api.updateHUD(); }
     if (race.active) race.time += dt;
-    rings.forEach((r, i) => {
+    if (!window.Rides?.busy() && api.ride() !== 'horse') rings.forEach((r, i) => {
       if (!near(r.x, r.z, 3.4)) { if (race.warned === i) race.warned = -1; return; }
       const seq = raceSequence(race.level);
       if (!race.active && i === 0) {
@@ -402,6 +408,7 @@
       ['garden', '🥕', 'Garden', `${s.harvested} picked`],
       ['chest', '🧰', 'Treasure chests', `${s.opened.length} of ${CHESTS.length} found`],
       ['lost', '🔎', 'Find a lost baby', `${lost.filter(l => l.state === 'lost').length} still lost`],
+      ...(window.Rides?.tiles() || []),
       ['wardrobe', '👑', 'Wardrobe', 'Hats and buggy paint'],
       ...(s.trophies ? [['fireworks', '🎆', 'Fireworks show', `${s.trophies} trophies`]] : [])
     ];
@@ -441,12 +448,12 @@
     else if (a === 'hat') { s.hat = b.dataset.id; persist(); applyLook(); wardrobe(); api.speak(`${HATS.find(h => h.id === s.hat).label}! Looking great.`); }
     else if (a === 'paint') { s.paint = b.dataset.id; persist(); applyLook(); wardrobe(); api.speak(`${PAINTS.find(p => p.id === s.paint).label} buggy! Vroom!`); }
     else if (a === 'fireworks') { api.setMode('play'); celebrate(10); api.say('A fireworks show for a champion explorer! Look up in the sky!'); }
-    else guide(a);
+    else if (!window.Rides?.guide(a)) guide(a);
   });
 
   window.Adventures = Object.freeze({
     init(world) { api = world; T = world.T; build(); race.level = raceLevel(); labelRings(); rollMissions(); ready = true; },
-    update, goal, board, event,
-    reset() { s.rescued = []; s.opened = []; s.harvested = 0; s.raceWins = 0; s.best = {}; s.hat = 'explorer'; s.paint = 'yellow'; followers.length = 0; lost.forEach(l => { l.state = 'lost'; }); persist(); syncLost(); syncChests(); applyLook(); race.active = false; race.level = 1; labelRings(); }
+    update, goal, board, event, celebrate,
+    reset() { window.Rides?.reset(); s.rescued = []; s.opened = []; s.harvested = 0; s.raceWins = 0; s.best = {}; s.hat = 'explorer'; s.paint = 'yellow'; followers.length = 0; lost.forEach(l => { l.state = 'lost'; }); persist(); syncLost(); syncChests(); applyLook(); race.active = false; race.level = 1; labelRings(); }
   });
 })();

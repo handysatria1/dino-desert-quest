@@ -11,17 +11,18 @@
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
   const scene = new T.Scene(); scene.background = new T.Color('#b9ddd6'); scene.fog = new T.Fog('#b9ddd6', 140, 340);
   const camera = new T.OrthographicCamera(-30, 30, 22, -22, .1, 500);
-  const driverCamera = new T.PerspectiveCamera(78, 1, .08, 500);
-  const followCamera = new T.PerspectiveCamera(63, 1, .12, 600);
+  const driverCamera = new T.PerspectiveCamera(78, 1, .08, 900);
+  const followCamera = new T.PerspectiveCamera(63, 1, .12, 900);
   const orbit = { yaw: 0, pitch: .30, lastLook: -100, driverYaw: 0, driverPitch: 0 };
   let exploreView = 'follow', lookPointer = null, lookStart = null, lookLast = null, dragged = false;
   const trunks = [];
+  let ride = 'buggy', riding = false;
   let interior = null, entranceIntent = false, driverView = true, outsidePosition = null;
   const interiorCache = new Map();
   const sun = new T.DirectionalLight('#fff0d5', 2.6); sun.position.set(-40, 85, 45); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
   Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 180 }); sun.shadow.normalBias = .12; sun.shadow.bias = -.0004;
   scene.add(sun, sun.target, new T.HemisphereLight('#eaf4df', '#78946a', 2.1));
-  const materials = new Map(), geometry = { box: new T.BoxGeometry(1, 1, 1), ball: new T.IcosahedronGeometry(1, 1) };
+  const materials = new Map(), geometry = { box: new T.BoxGeometry(1, 1, 1), ball: new T.IcosahedronGeometry(1, 2) };
   function mat(color) { if (!materials.has(color)) materials.set(color, new T.MeshStandardMaterial({ color, roughness: .9, flatShading: true })); return materials.get(color); }
   function mesh(parent, geo, color, x, y, z, sx = 1, sy = sx, sz = sx) { const m = new T.Mesh(geo, mat(color)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = m.receiveShadow = true; parent.add(m); return m; }
   function group(x = 0, y = 0, z = 0, parent = scene) { const g = new T.Group(); g.position.set(x, y, z); parent.add(g); return g; }
@@ -58,7 +59,7 @@
   const scenery = group();
   const ground = cylinder(scenery, '#b4ce91', 0, -.9, 0, 202, 200, 1.8, 96);
   cylinder(scenery, '#e6d3a5', 0, -1.7, 0, 206, 203, 1.4, 96);
-  const sea = mesh(scene, new T.PlaneGeometry(1800, 1800), '#84bcb7', 0, -2.5, 0); sea.rotation.x = -Math.PI / 2; sea.castShadow = false;
+  const sea = mesh(scene, new T.PlaneGeometry(1800, 1800), '#84bcb7', 0, -2.5, 0); window.Scenery?.preInit?.({ T, scene }); sea.rotation.x = -Math.PI / 2; sea.castShadow = false;
   disk(scenery, '#d9d6af', 0, 0, 24);
   const places = catalog.places;
   const oldCenters = places.map(p => ({ id: p.id, x: p.x, z: p.z }));
@@ -78,12 +79,12 @@
   });
   // A loop road joins the districts, as well as the central garden paths.
   const loop = places.map(p => [p.x * 1.2, p.z * 1.2 + 6]); road([...loop, loop[0], loop[1]], 2.6);
-  for (let i = 0; i < 84; i++) { const a = i * 2.39996, r = 170 + i % 4 * 6; tree(scenery, Math.cos(a) * r, Math.sin(a) * r, 1.2 + i % 3 * .3); }
+  for (let i = 0; i < 84; i++) { const a = i * 2.39996, r = 170 + i % 4 * 6; if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a)) - Math.PI / 2) < .42) continue; tree(scenery, Math.cos(a) * r, Math.sin(a) * r, 1.2 + i % 3 * .3); }
   // Distant islands and clouds give the ground-level camera a real horizon.
   for (let i = 0; i < 16; i++) {
-    const a = i * 2.4, r = 250 + i % 3 * 30;
-    ball(scenery, '#8eae95', Math.cos(a) * r, -2, Math.sin(a) * r, 25 + i % 3 * 9, 10 + i % 4 * 6, 22);
-    const cloud = group(Math.cos(a) * (r - 20), 49 + i % 4 * 8, Math.sin(a) * (r - 20), scenery);
+    const a = i * 2.4, r = 470 + i % 3 * 40;
+    ball(scenery, '#8eae95', Math.cos(a) * r, -2, Math.sin(a) * r, 40 + i % 3 * 14, 16 + i % 4 * 9, 36);
+    const cloud = group(Math.cos(a) * (r - 200), 49 + i % 4 * 8, Math.sin(a) * (r - 200), scenery);
     for (let j = 0; j < 3; j++) { const puff = ball(cloud, '#edf0de', j * 5, j % 2 * 2, 0, 6, 2.5, 4); puff.castShadow = false; }
   }
   const camp = group(10, 0, -1, scenery);
@@ -105,7 +106,8 @@
   });
   function walkable(x, z) {
     if (interior) return Math.abs(x) < 10.8 && z > -8.6 && z < 9 && !interior.blocks.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d);
-    return Math.hypot(x, z) < 195 && !blockers.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d) && !trunks.some(t => Math.hypot(x - t.x, z - t.z) < t.radius);
+    if (riding && ride === 'boat') return !!window.Rides?.sailable(x, z);
+    return (Math.hypot(x, z) < 195 || !!window.Scenery?.extraLand(x, z)) && !blockers.some(b => Math.abs(x - b.x) < b.w && Math.abs(z - b.z) < b.d) && !trunks.some(t => Math.hypot(x - t.x, z - t.z) < t.radius);
   }
   function safePoint(x, z) {
     if (interior) {
@@ -114,7 +116,7 @@
       for (let r = .5; r < 25; r += .5) for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (walkable(px, pz)) return new T.Vector3(px, 0, pz); }
       return new T.Vector3(0, 0, 6);
     }
-    x = Math.max(-194, Math.min(194, Number.isFinite(x) ? x : 0)); z = Math.max(-194, Math.min(194, Number.isFinite(z) ? z : 21));
+    x = Math.max(-400, Math.min(400, Number.isFinite(x) ? x : 0)); z = Math.max(-400, Math.min(400, Number.isFinite(z) ? z : 21));
     if (walkable(x, z)) return new T.Vector3(x, 0, z);
     for (let r = 2; r < 240; r += 2) for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (walkable(px, pz)) return new T.Vector3(px, 0, pz); }
     return new T.Vector3(0, 0, 21);
@@ -129,7 +131,7 @@
     position.copy(safePoint(x, z)); carPosition.copy(safePoint(position.x + 4, position.z));
   }
   function save() { const p = interior ? outsidePosition : position; try { localStorage.setItem(key, JSON.stringify({ ...state, layout: 2, x: p.x, z: p.z })); } catch { storageOK = false; } }
-  let mode = 'title', started = false, riding = false, time = 0, last = 0, speed = 0, hop = 0, hopSpeed = 0, heading = Math.PI, nearest = null, currentPlace = null, message = '', speechToken = 0, target = null, route = [], saveTime = 0, toastTimer = null, moving = false;
+  let mode = 'title', started = false, time = 0, last = 0, speed = 0, hop = 0, hopSpeed = 0, heading = Math.PI, nearest = null, currentPlace = null, message = '', speechToken = 0, target = null, route = [], saveTime = 0, toastTimer = null, moving = false;
   const keys = new Set(), joy = new T.Vector2(); let joyPointer = null;
   function clearInput() { keys.clear(); joy.set(0, 0); joyPointer = null; lookPointer = null; lookStart = lookLast = null; dragged = false; $('#stick').style.transform = ''; }
   function stopWalk() { target = null; route = []; $('#route').hidden = true; }
@@ -261,19 +263,20 @@
   }
   function playGoal() { return interior ? interiorGoal() : currentPlace ? entranceIntent ? doorway(currentPlace) : goal(currentPlace) : window.Adventures?.goal() || null; }
   function refreshView() {
+    const car = riding && ride === 'buggy';
     $('#inside').hidden = !currentPlace;
     $('#inside b').textContent = interior ? 'OUT' : 'IN';
     $('#inside').setAttribute('aria-label', interior ? 'Go back outside' : `Find the entrance to ${currentPlace?.name || 'the building'}`);
     $('#camera-mode').hidden = false;
-    $('#camera-mode').setAttribute('aria-pressed', String(riding ? driverView : exploreView === 'follow'));
-    $('#camera-mode').setAttribute('aria-label', riding ? driverView ? 'Switch to outside camera' : 'Switch to driver seat camera' : exploreView === 'follow' ? 'Switch to overhead camera' : 'Switch to third person camera');
-    $('#camera-mode span').textContent = riding ? driverView ? '🚙' : '👀' : exploreView === 'follow' ? '🗺️' : '🧒';
-    $('#camera-mode b').textContent = riding ? driverView ? 'OUTSIDE' : 'DRIVER' : exploreView === 'follow' ? 'ABOVE' : 'FOLLOW';
-    $('#hop').hidden = riding;
-    root.classList.toggle('driving', riding && driverView);
-    root.classList.toggle('immersive', riding && driverView || exploreView === 'follow');
-    $('#joystick .arrows').innerHTML = riding && driverView ? '↑<br>↶　↷<br>↓' : '↑<br>←　→<br>↓';
-    $('#joystick').setAttribute('aria-label', riding && driverView ? 'Slide up to drive, left or right to steer, down to reverse' : 'Slide to walk or drive');
+    $('#camera-mode').setAttribute('aria-pressed', String(car ? driverView : exploreView === 'follow'));
+    $('#camera-mode').setAttribute('aria-label', car ? driverView ? 'Switch to outside camera' : 'Switch to driver seat camera' : exploreView === 'follow' ? 'Switch to overhead camera' : 'Switch to third person camera');
+    $('#camera-mode span').textContent = car ? driverView ? '🚙' : '👀' : exploreView === 'follow' ? '🗺️' : '🧒';
+    $('#camera-mode b').textContent = car ? driverView ? 'OUTSIDE' : 'DRIVER' : exploreView === 'follow' ? 'ABOVE' : 'FOLLOW';
+    $('#hop').hidden = riding && ride !== 'horse';
+    root.classList.toggle('driving', car && driverView);
+    root.classList.toggle('immersive', car && driverView || exploreView === 'follow');
+    $('#joystick .arrows').innerHTML = car && driverView ? '↑<br>↶　↷<br>↓' : '↑<br>←　→<br>↓';
+    $('#joystick').setAttribute('aria-label', car && driverView ? 'Slide up to drive, left or right to steer, down to reverse' : 'Slide to walk or drive');
   }
   function leaveInterior(aloud = true) {
     if (!interior) return;
@@ -392,7 +395,7 @@
   function fastTravel(id) {
     const p = places.find(p => p.id === id); if (!p) return;
     leaveInterior(false); entranceIntent = false;
-    position.copy(safePoint(p.x, p.z + 23)); carPosition.copy(safePoint(p.x + 4, p.z + 23)); riding = false; speed = hop = hopSpeed = 0; currentPlace = p;
+    position.copy(safePoint(p.x, p.z + 23)); carPosition.copy(safePoint(p.x + 4, p.z + 23)); riding = false; ride = 'buggy'; speed = hop = hopSpeed = 0; currentPlace = p;
     heading = Math.PI; resetCamera(); pip.position.set(position.x - 1.7, .3, position.z + 1.2);
     const m = activityModels.get('machu'); if (id === 'machu' && step(p) > 0 && step(p) < p.total) m.llama.position.set(position.x - p.x - 2, 0, position.z - p.z + 1);
     setMode('play'); updateHUD(); syncModels(); camFocus.copy(position); resize(); save();
@@ -403,7 +406,7 @@
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="travel-title">${closeButton()}<small>EVERY PLACE IS OPEN</small><h2 id="travel-title">Where shall we go?</h2><p>Tap a picture. Hear its name. Go exploring!</p><div class="travel-grid">${places.map(p => `<button class="travel-card ${currentPlace?.id === p.id ? 'active' : ''}" data-act="visit" data-place="${p.id}" aria-label="Explore ${p.name}, ${p.country}">${catalog.picture(p.id)}<strong>${p.name}</strong><small>${p.country}</small>${state.completed.includes(p.id) ? '<span class="stamp" aria-label="Explored">✓</span>' : ''}</button>`).join('')}<button class="travel-card" data-act="home" aria-label="Go to the home garden and buggy">${catalog.picture('home')}<strong>Home garden</strong><small>Buggy · ball · quiet camp</small></button></div><div class="passport" aria-label="${state.completed.length} of seven places explored">${places.map(p => `<i class="${state.completed.includes(p.id) ? 'done' : ''}" title="${p.name}">${state.completed.includes(p.id) ? '✓' : '·'}</i>`).join('')}</div><p class="letter-count">🎈 Letters found: <b>${lettersFound()} of 26</b></p><div class="buttons"><button class="primary" data-act="adventures">🎪 Adventures</button><button data-act="letters">🎈 Find a letter</button><button data-act="brain">🧠 Brain games</button><button data-act="island">🦕 Dinosaur island</button><button data-act="camp">☾ Quiet camp</button></div><p class="fine">An imaginary explorer park with miniature landmarks, not a real-world map. All activities use pretend gardens, paths and building models.</p></section>`;
     focusCard(); speak('Where shall we go? Tap a big picture to visit a wonder. Every place is open.');
   }
-  function home() { leaveInterior(false); entranceIntent = false; position.set(0, 0, 21); carPosition.set(4, 0, 20); riding = false; speed = 0; heading = Math.PI; resetCamera(); currentPlace = null; setMode('play'); camFocus.copy(position); resize(); updateHUD(); save(); say('Home again! Your little buggy is waiting. Swipe the world to look around, or choose another picture on the globe.'); }
+  function home() { leaveInterior(false); entranceIntent = false; position.set(0, 0, 21); carPosition.set(4, 0, 20); riding = false; ride = 'buggy'; speed = 0; heading = Math.PI; resetCamera(); currentPlace = null; setMode('play'); camFocus.copy(position); resize(); updateHUD(); save(); say('Home again! Your little buggy is waiting. Swipe the world to look around, or choose another picture on the globe.'); }
   function pause() {
     if (!started) return; save(); setMode('pause');
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="pause-title">${closeButton()}<small>PIP WILL WAIT</small><h2 id="pause-title">A little breather.</h2><p>Your adventures are saved. No hurry.</p><div class="buttons"><button class="primary" data-act="resume">▶ Play</button><button data-act="adventures">🎪 Adventures</button><button data-act="brain">🧠 Brain games</button><button data-act="travel">🌍 Go somewhere</button></div><div class="grownup-grid"><button data-act="audio">☷ Qur’an audio</button><button data-act="camp">☾ Quiet camp</button><button data-act="notes">Grown-up guide</button><button data-act="island">🦕 Dinosaur island</button></div></section>`; focusCard();
@@ -411,7 +414,7 @@
   function notes() {
     setMode('notes');
     overlay.innerHTML = `<section class="card" role="dialog" aria-modal="true" aria-labelledby="notes-title">${closeButton('pause')}<small>FOR YOUR GROWN-UP</small><h2 id="notes-title">Freedom to explore. Space to learn.</h2><p>A gentle open-world explorer park for ages 5–6. The child’s screen has a picture globe, movement joystick, hop, one changing action button, and Pip’s spoken help. No independent reading is required; device English speech availability varies.</p><p>Walk or drive the electric pretend buggy between seven miniature wonder districts, or use picture travel. Arrow keys/WASD move, Space hops, E interacts, Escape pauses. Tap the ground to walk; tap Pip to follow a safe route to the next activity. There are no enemies, crime, weapons, traffic collisions, timers, lost lives, purchases, ads, accounts, music or microphone access.</p><div class="site-facts"><strong>The New Seven Wonders</strong><p>Great Wall, Petra, Taj Mahal, Colosseum, Chichén Itzá, Machu Picchu, and the Christ the Redeemer site on Corcovado. To respect the family’s request not to depict prophets, Brazil is represented by the mountain, forest and viewpoint, without the statue or any religious figure.</p><p>These are stylised, reduced-scale, imaginary park replicas, not historical reconstructions or geographical neighbours. Children garden and build on pretend activity grounds, never on the actual protected monuments. All seven destinations are open immediately; stamps celebrate exploration, not tests.</p></div><p>Quiet camp is always open, retaining the existing parent-guided Muhammadiyah prayer sequence and four surahs. Religious learning gives no game rewards and unlocks nothing. Review religious material with a qualified teacher. No depictions of Allah or prophets.</p><p>Optional Juz Amma uses the existing community-attributed Muzammil Hasballah stream; it is not independently authenticated as an official release. Internet is needed for audio. Playback pauses for narration, menus, learning and hidden tabs. Nothing streams before an explicit Start tap.</p><p>Saved on this browser: site activity steps, completed postcards, replay variations, voice setting and explorer position. No name, age or birthday is stored. Original dinosaur discoveries remain in their separate save. ${storageOK ? '' : '<strong>Storage is unavailable: this visit remains playable but cannot be saved.</strong>'}</p><div class="buttons"><button data-act="voice" aria-pressed="${state.voice}">🔊 English voice: ${state.voice ? 'on' : 'off'}</button><button data-act="fullscreen">Full screen</button><button data-act="reset">Reset wonder activities</button></div><p class="fine">Local procedural art · Three.js 0.160.1 · <a href="vendor/THREE-LICENSE.txt">MIT licence</a> · <a href="play.html">Original illustrated adventure</a>.</p></section>`; focusCard();
-    overlay.querySelector('.site-facts').insertAdjacentHTML('beforeend', '<p><strong>New: immersive 3D exploration.</strong> The default is a perspective camera following behind the explorer. Swipe an empty part of the world to turn and look up or down; use the movement circle with your other thumb. Walking follows camera directions. A short tap on the floor still walks there. The camera picture switches between close exploration and the original overhead accessibility view. On a keyboard, V changes camera and C looks ahead. There is no camera shake or head bob. Camera collision pulls the view in before walls; ceiling and near walls lift away in overhead mode.</p><p>The park has nearly twice the previous ground area, with districts 40% further apart, taller landmarks, a mountain-island horizon and more trees. A simple path still joins every destination, and picture travel remains instant. Existing activity progress is preserved; older positions are safely migrated into the expanded layout. Android Chrome is supported through the browser; this release is not a native APK.</p><p><strong>New: adventure board.</strong> From the globe or pause menu: rescue ten lost baby animals and lead them to the farm, drive a numbered-ring race (counting to 10, in twos, and back from 10), grow and pick six crops in the garden, find six shape-marked treasure chests, and dress up in the wardrobe. Three daily missions give a trophy and fireworks when finished. Progress saves only in this browser.</p><p><strong>New: letter hunt and brain games.</strong> Twenty-six letter balloons float around the park; walking or driving through one says the letter and a word that starts with it, and adds a star. “Find a letter” on the globe menu guides your child to the next letter in alphabet order. Brain games (globe or pause menu) offer ten short activities in numbers, letters, thinking, shapes and the seven wonders. Each game levels up as your child solves more, and every ten stars unlocks a sticker. There are no timers, lives or penalties; a wrong tap just gets a gentle hint.</p><p><strong>Walk through the doorway.</strong> On foot, walk into a bright doorway to enter and back through the room doorway to exit. The doorway picture and Enter/Out buttons remain available as accessible alternatives. Each destination has a bright enclosed learning room with three inspectable models. These are fictional rooms inspired by architecture and materials, not authenticated monument interiors. Chichén Itzá uses a pretend visitor discovery room; Corcovado uses an imaginary forest lodge, without a statue or religious figure. Indoor discoveries give no rewards and do not change outdoor activity progress. Indoor position is never saved: reloading safely returns outside.</p><p>The buggy opens in a true perspective driver-seat view with a 3D steering wheel and dashboard. Up drives, left/right steers, down reverses; sideways-only input gently rolls forward while turning. The camera picture switches to a third-person chase view. Swipe to glance around inside the car; the view gently returns forward while moving. No driving hops. Tap footprints to get out.</p>');
+    overlay.querySelector('.site-facts').insertAdjacentHTML('beforeend', '<p><strong>New: immersive 3D exploration.</strong> The default is a perspective camera following behind the explorer. Swipe an empty part of the world to turn and look up or down; use the movement circle with your other thumb. Walking follows camera directions. A short tap on the floor still walks there. The camera picture switches between close exploration and the original overhead accessibility view. On a keyboard, V changes camera and C looks ahead. There is no camera shake or head bob. Camera collision pulls the view in before walls; ceiling and near walls lift away in overhead mode.</p><p>The park has nearly twice the previous ground area, with districts 40% further apart, taller landmarks, a mountain-island horizon and more trees. A simple path still joins every destination, and picture travel remains instant. Existing activity progress is preserved; older positions are safely migrated into the expanded layout. Android Chrome is supported through the browser; this release is not a native APK.</p><p><strong>New: rides, sea and a fresh look.</strong> A softer sky, a moving sea with foam, a sandy beach with a dock, flowers and grass. Ride the horse from the stable and tap HOP to jump five fences. Walk to the end of the dock and tap SAIL to sail to the lighthouse past jumping dolphins. Collect eight seashells. Drive your buggy to the Grand Prix start line to race Fox, Panda and Bunny over three laps; rivals ease off when your child is ahead, and the place depends on steady driving.</p><p><strong>New: adventure board.</strong> From the globe or pause menu: rescue ten lost baby animals and lead them to the farm, drive a numbered-ring race (counting to 10, in twos, and back from 10), grow and pick six crops in the garden, find six shape-marked treasure chests, and dress up in the wardrobe. Three daily missions give a trophy and fireworks when finished. Progress saves only in this browser.</p><p><strong>New: letter hunt and brain games.</strong> Twenty-six letter balloons float around the park; walking or driving through one says the letter and a word that starts with it, and adds a star. “Find a letter” on the globe menu guides your child to the next letter in alphabet order. Brain games (globe or pause menu) offer ten short activities in numbers, letters, thinking, shapes and the seven wonders. Each game levels up as your child solves more, and every ten stars unlocks a sticker. There are no timers, lives or penalties; a wrong tap just gets a gentle hint.</p><p><strong>Walk through the doorway.</strong> On foot, walk into a bright doorway to enter and back through the room doorway to exit. The doorway picture and Enter/Out buttons remain available as accessible alternatives. Each destination has a bright enclosed learning room with three inspectable models. These are fictional rooms inspired by architecture and materials, not authenticated monument interiors. Chichén Itzá uses a pretend visitor discovery room; Corcovado uses an imaginary forest lodge, without a statue or religious figure. Indoor discoveries give no rewards and do not change outdoor activity progress. Indoor position is never saved: reloading safely returns outside.</p><p>The buggy opens in a true perspective driver-seat view with a 3D steering wheel and dashboard. Up drives, left/right steers, down reverses; sideways-only input gently rolls forward while turning. The camera picture switches to a third-person chase view. Swipe to glance around inside the car; the view gently returns forward while moving. No driving hops. Tap footprints to get out.</p>');
   }
   function openBrain() { if (!window.BrainGames) return; window.BrainGames.open({ overlay, speak, start: () => setMode('brain'), exit: () => setMode('play') }); }
   function campMenu() {
@@ -452,6 +455,8 @@
     if (currentPlace) { const g = goal(currentPlace), d = Math.hypot(position.x - g.x, position.z - g.z); if (d < 3.5 && !(currentPlace.id === 'petra' || currentPlace.id === 'chichen' || currentPlace.id === 'machu' && [1, 2].includes(step(currentPlace))) || g.done && d < 4) return { kind: 'activity', ...g }; }
     if (Math.hypot(position.x - 10, position.z + 1) < 5) return { kind: 'camp', icon: '☾', verb: 'QUIET', text: 'Quiet camp with your grown-up' };
     if (Math.hypot(position.x + 12, position.z) < 5) return { kind: 'island', icon: '🦕', verb: 'DINOS', text: 'Visit dinosaur island' };
+    const mount = window.Rides?.near(position, riding ? ride : null); if (mount) return { kind: 'mount', ...mount };
+    if (riding && ride !== 'buggy') return null;
     if (riding) return { kind: 'car', icon: '👣', verb: 'WALK', text: 'Hop out of the buggy' };
     if (Math.hypot(position.x - carPosition.x, position.z - carPosition.z) < 5) return { kind: 'car', icon: '🚙', verb: 'RIDE', text: 'Ride in your little buggy' };
     return null;
@@ -461,7 +466,12 @@
     if (o.kind === 'enter') { enterInterior(); return; }
     if (o.kind === 'exit') { leaveInterior(); return; }
     if (o.kind === 'inspect') { inspect(o.source); return; }
-    if (o.kind === 'car') { riding = !riding; speed = 0; if (!riding) { carPosition.copy(position); position.copy(safePoint(position.x + 2.8, position.z)); } else { position.copy(carPosition); driverView = true; } updateHUD(); say(riding ? 'You are in the driver’s seat! Push up to drive, left or right to steer, and down to reverse. Tap the camera to see outside. Tap the footprints to get out.' : 'Back on explorer feet! Your buggy will wait right here.'); }
+    if (o.kind === 'mount') {
+      if (riding) { const p = window.Rides.dismount(ride, position); riding = false; ride = 'buggy'; speed = 0; position.copy(p ? new T.Vector3(p.x, 0, p.z) : safePoint(position.x + 2.5, position.z)); }
+      else { const p = window.Rides.mount(o.id); riding = true; ride = o.id; speed = 0; hop = hopSpeed = 0; position.set(p.x, 0, p.z); heading = p.heading ?? heading; }
+      resetCamera(); updateHUD(); nearest = nearby(); updateAction(); return;
+    }
+    if (o.kind === 'car') { ride = 'buggy'; riding = !riding; speed = 0; if (!riding) { carPosition.copy(position); position.copy(safePoint(position.x + 2.8, position.z)); } else { position.copy(carPosition); driverView = true; } updateHUD(); say(riding ? 'You are in the driver’s seat! Push up to drive, left or right to steer, and down to reverse. Tap the camera to see outside. Tap the footprints to get out.' : 'Back on explorer feet! Your buggy will wait right here.'); }
     else if (o.kind === 'camp') campMenu();
     else if (o.kind === 'island') islandPrompt();
     else {
@@ -511,13 +521,13 @@
   const followFocus = position.clone().add(new T.Vector3(0, 1.9, 0)), cameraRay = new T.Raycaster();
   let cameraSnap = true, cameraClearance = 10;
   function resetCamera() { orbit.yaw = heading + Math.PI; orbit.pitch = interior ? .24 : .30; orbit.lastLook = time - 100; orbit.driverYaw = orbit.driverPitch = 0; cameraSnap = true; followFocus.copy(position).y = 1.9; }
-  function chosenCamera() { return riding && driverView ? driverCamera : exploreView === 'follow' ? followCamera : camera; }
+  function chosenCamera() { return riding && ride === 'buggy' && driverView ? driverCamera : exploreView === 'follow' ? followCamera : camera; }
   function toggleCamera() {
     if (!active()) return; clearInput(); stopWalk(); speed = 0;
-    if (riding) { driverView = !driverView; exploreView = 'follow'; }
+    if (riding && ride === 'buggy') { driverView = !driverView; exploreView = 'follow'; }
     else exploreView = exploreView === 'follow' ? 'overview' : 'follow';
     resetCamera(); updateHUD();
-    say(riding && driverView ? 'Driver’s seat! Up to go, left or right to steer, down to reverse.' : exploreView === 'follow' ? 'Explorer view! Swipe the world to look around. Slide the circle to walk where you are looking.' : 'Bird’s-eye view! Tap the camera to get close again.');
+    say(riding && ride === 'buggy' && driverView ? 'Driver’s seat! Up to go, left or right to steer, down to reverse.' : exploreView === 'follow' ? 'Explorer view! Swipe the world to look around. Slide the circle to walk where you are looking.' : 'Bird’s-eye view! Tap the camera to get close again.');
   }
   function resize() { const w = root.clientWidth, h = root.clientHeight, span = interior ? w / h < .8 ? 43 : 35 : currentPlace ? w / h < .8 ? 54 : 52 : w / h < .8 ? 37 : 43; renderer.setSize(w, h, false); camera.left = -span * w / h / 2; camera.right = span * w / h / 2; camera.top = span / 2; camera.bottom = -span / 2; camera.updateProjectionMatrix(); driverCamera.aspect = followCamera.aspect = w / h; driverCamera.fov = w / h < .8 ? 88 : 78; followCamera.fov = w / h < .8 ? 76 : 68; driverCamera.updateProjectionMatrix(); followCamera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(root);
@@ -530,7 +540,7 @@
       const v = (keys.has('ArrowDown') || keys.has('s') ? 1 : 0) - (keys.has('ArrowUp') || keys.has('w') ? 1 : 0) + joy.y;
       const direction = new T.Vector3();
       const previous = position.clone();
-      const cockpit = riding && driverView;
+      const cockpit = riding && ride === 'buggy' && driverView;
       const manualDrive = cockpit && Math.hypot(h, v) > .12;
       if (Math.hypot(h, v) > .12) {
         stopWalk();
@@ -546,7 +556,7 @@
       }
       else if (target) { direction.copy(target).sub(position); if (direction.length() < (route.length ? .65 : 1.2)) { if (route.length) target = route.shift(); else stopWalk(); direction.set(0, 0, 0); } else direction.normalize(); }
       moving = direction.lengthSq() > .01;
-      speed += ((moving ? riding ? 17 : target ? 10 : 8 : 0) - speed) * Math.min(1, dt * (riding ? 4 : 12));
+      speed += ((moving ? riding ? { buggy: 17, horse: 15, boat: 14 }[ride] : target ? 10 : 8 : 0) - speed) * Math.min(1, dt * (riding ? 4 : 12));
       if (moving) {
         const dx = direction.x * dt * speed, dz = direction.z * dt * speed;
         if (walkable(position.x + dx, position.z + dz)) { position.x += dx; position.z += dz; }
@@ -561,16 +571,19 @@
       if (interior && previous.z <= 8.05 && position.z > 8.05 && Math.abs(position.x) < 1.5) leaveInterior();
       else if (!interior && !riding && currentPlace && previous.z >= currentPlace.z + 7.65 && position.z < currentPlace.z + 7.65 && Math.abs(position.x - currentPlace.x) < 1.5) enterInterior();
       hopSpeed -= 19 * dt; hop = Math.max(0, hop + hopSpeed * dt); if (!hop) hopSpeed = 0;
-      player.model.position.set(position.x, .25 + hop + (riding ? 1.1 : 0), position.z); player.model.rotation.y = heading; player.model.scale.setScalar(riding ? .68 : 1);
+      const groundY = interior ? 0 : riding && ride === 'boat' ? window.Rides?.boatY() ?? -2 : window.Scenery?.height(position.x, position.z) ?? 0;
+      player.model.position.set(position.x, groundY + .25 + hop + (riding ? { buggy: 1.1, horse: 1.85, boat: .75 }[ride] : 0), position.z); player.model.rotation.y = heading; player.model.scale.setScalar(riding ? .68 : 1);
       player.legs.forEach((leg, i) => { leg.rotation.x = moving && !riding && !reduced ? Math.sin(time * 12 + i * Math.PI) * .55 : 0; });
       player.arms.forEach((arm, i) => { arm.rotation.x = moving && !riding && !reduced ? -Math.sin(time * 12 + i * Math.PI) * .4 : 0; });
-      if (riding) { carPosition.copy(position); buggy.rotation.y = heading; }
-      buggy.position.set(carPosition.x, .25 + (riding ? hop : 0), carPosition.z); wheels.forEach(w => { if (moving && riding) w.rotation.x += dt * speed * 1.5; });
-      const behind = new T.Vector3(position.x - Math.sin(heading) * 1.2 + Math.cos(heading) * 1.7, 0, position.z - Math.cos(heading) * 1.2 - Math.sin(heading) * 1.7); pip.position.lerp(behind, Math.min(1, dt * 5)); pip.position.y = .3 + (!reduced && moving ? Math.abs(Math.sin(time * 9)) * .15 : 0); pip.rotation.y = heading;
+      const inBuggy = riding && ride === 'buggy';
+      if (inBuggy) { carPosition.copy(position); buggy.rotation.y = heading; }
+      buggy.position.set(carPosition.x, .25 + (inBuggy ? hop : 0) + (window.Scenery?.height(carPosition.x, carPosition.z) ?? 0), carPosition.z); wheels.forEach(w => { if (moving && inBuggy) w.rotation.x += dt * speed * 1.5; });
+      if (!interior) window.Rides?.follow(riding ? ride : null, position, heading, speed, moving, hop, dt);
+      const behind = new T.Vector3(position.x - Math.sin(heading) * 1.2 + Math.cos(heading) * 1.7, 0, position.z - Math.cos(heading) * 1.2 - Math.sin(heading) * 1.7); pip.position.lerp(behind, Math.min(1, dt * 5)); pip.position.y = .3 + (interior ? 0 : window.Scenery?.height(pip.position.x, pip.position.z) ?? 0) + (!reduced && moving ? Math.abs(Math.sin(time * 9)) * .15 : 0); pip.rotation.y = heading; pip.visible = !(riding && ride === 'boat');
       carried.position.set(position.x, riding ? 3.8 : 2.5, position.z - .8);
       const found = interior ? currentPlace : places.find(p => Math.hypot(position.x - p.x, position.z - p.z) < 34) || null;
       if (found?.id !== currentPlace?.id) { currentPlace = found; entranceIntent = false; resize(); updateHUD(); syncModels(); if (found) visitMessage(found); }
-      if (!interior) { updateActivities(dt); updateLetters(dt); window.Adventures?.update(dt); }
+      if (!interior) { updateActivities(dt); updateLetters(dt); window.Adventures?.update(dt); window.Rides?.update(dt); window.Scenery?.update(dt, time); }
       nearest = nearby(); updateAction();
       const dx = beachBall.position.x - position.x, dz = beachBall.position.z - position.z, d = Math.hypot(dx, dz);
       if (!interior && moving && d < (riding ? 2.7 : 1.7)) ballVelocity.set(dx / Math.max(.1, d), 0, dz / Math.max(.1, d)).multiplyScalar(riding ? 16 : 10);
@@ -586,7 +599,7 @@
     if (interior) { focus.set(position.x * .18, .5, position.z * .15); }
     else if (currentPlace) { focus.x = position.x * .8 + currentPlace.x * .2; focus.z -= 8; focus.y = 2; }
     camFocus.lerp(focus, reduced ? 1 : Math.min(1, dt * 5)); camera.position.copy(camFocus).add(camOffset); camera.lookAt(camFocus);
-    const cockpit = riding && driverView;
+    const cockpit = riding && ride === 'buggy' && driverView;
     if (interior) interior.enclosure.visible = exploreView === 'follow';
     sun.position.set(position.x - 40, 85, position.z + 45); sun.target.position.set(position.x, 0, position.z);
     if ((target || riding) && moving && time - orbit.lastLook > 2 && lookPointer === null) {
@@ -594,14 +607,14 @@
     }
     const aim = new T.Vector3(position.x, riding ? 2.2 : 1.9, position.z);
     followFocus.lerp(aim, reduced || cameraSnap ? 1 : Math.min(1, dt * 12));
-    const distance = interior ? 6.8 : riding ? 12 : 10.5;
+    const distance = interior ? 6.8 : riding ? ride === 'boat' ? 15 : 12 : 10.5;
     const offset = new T.Vector3(Math.sin(orbit.yaw) * Math.cos(orbit.pitch), Math.sin(orbit.pitch), Math.cos(orbit.yaw) * Math.cos(orbit.pitch));
     cameraRay.set(followFocus, offset); cameraRay.near = .2; cameraRay.far = distance;
     const cameraHits = !cockpit && exploreView === 'follow' ? cameraRay.intersectObjects(interior ? interior.occluders : cameraBoxes, true) : [];
     const clearance = cameraHits.length ? Math.max(1.05, Math.min(distance, cameraHits[0].distance - .4)) : distance;
     cameraClearance = clearance < cameraClearance || cameraSnap ? clearance : cameraClearance + (clearance - cameraClearance) * Math.min(1, dt * 5);
     followCamera.position.copy(followFocus).addScaledVector(offset, cameraClearance); followCamera.lookAt(followFocus); cameraSnap = false;
-    player.model.visible = !cockpit; pip.visible = !cockpit;
+    player.model.visible = !cockpit; pip.visible = !cockpit && !(riding && ride === 'boat');
     carried.visible = !interior && !cockpit && currentPlace?.id === 'wall' && step(currentPlace) % 2 === 1;
     if (cockpit) {
       // Fixed eye height, no camera shake or head bob. Steering changes the view with the car.
@@ -619,7 +632,7 @@
     canvas.dataset.heading = heading.toFixed(3);
     renderer.render(interior ? interior.scene : scene, chosenCamera());
   }
-  function doHop() { if (active() && !hop && !riding) hopSpeed = 6; }
+  function doHop() { if (active() && !hop && (!riding || ride === 'horse')) hopSpeed = riding ? 8 : 6; }
   function start() { started = true; setMode('play'); updateHUD(); say('Salaam, little explorer! Slide the circle to walk. Swipe the world to look around. Tap the globe to explore, or the gold car button for a ride. Pip will help you!'); }
   $('#travel').onclick = travelMenu; $('#pause').onclick = pause; $('#help').onclick = help; $('#repeat').onclick = () => speak(message); $('#do').onclick = interact; $('#hop').onclick = doHop; $('#cancel-route').onclick = stopWalk;
   $('#inside').onclick = insideButton;
@@ -687,9 +700,11 @@
     if (e.shiftKey && (document.activeElement === first || !items.includes(document.activeElement))) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && (document.activeElement === last || !items.includes(document.activeElement))) { e.preventDefault(); first.focus(); }
   });
-  window.Adventures?.init({ T, scene, group, box, ball, cylinder, segment, mesh, mat, sign, merge: mergeScenery, safePoint, position, buggy, player: player.model, overlay, reduced,
+  const worldApi = { T, scene, sea, sun, renderer, fogColour: scene.fog.color, ride: () => riding ? ride : null, heading: () => heading, hop: () => hop, speed: () => speed,
+    getPosition: () => position, bringBuggy(x, z) { if (!riding) { carPosition.copy(safePoint(x, z)); } }, group, box, ball, cylinder, segment, mesh, mat, sign, merge: mergeScenery, safePoint, position, buggy, player: player.model, overlay, reduced,
     riding: () => riding, time: () => time, say, speak, toast, setMode, focusCard, updateHUD, go: d => { leaveInterior(false); go(d); },
-    burst(x, y, z) { if (reduced) return; sparkles.forEach((s, i) => { const a = i * 2.4; s.model.visible = true; s.model.position.set(x, y, z); s.life = 1.2; s.vx = Math.cos(a) * 2; s.vz = Math.sin(a) * 2; s.vy = 2.5 + i % 3; }); } });
+    burst(x, y, z) { if (reduced) return; sparkles.forEach((s, i) => { const a = i * 2.4; s.model.visible = true; s.model.position.set(x, y, z); s.life = 1.2; s.vx = Math.cos(a) * 2; s.vz = Math.sin(a) * 2; s.vy = 2.5 + i % 3; }); } };
+  window.Scenery?.init(worldApi); window.Rides?.init(worldApi); window.Adventures?.init(worldApi);
   syncLetters(); syncModels(); resize(); resetCamera(); setMode('title');
   overlay.innerHTML = `<section class="card title-card"><span class="title-icon" aria-hidden="true">🌍</span><small>STEP INTO YOUR OWN 3D ADVENTURE</small><h1>Pip’s<br>Wonder World.</h1><p>Look around. Walk inside.<br>Drive to seven amazing places.</p><div class="buttons"><button id="start" data-act="start">▶ PLAY</button></div><p class="fine">No enemies. No hurry. Pip will show you how.</p></section>`;
   requestAnimationFrame(frame);
