@@ -107,7 +107,7 @@
 
   function buildDecor() {
     const places = (window.WonderPlaces?.places || []).map(p => ({ x: p.x, z: p.z }));
-    const keep = [...places.map(p => ({ ...p, r: 33 })), { x: 0, z: 70, r: 17 }, { x: 120, z: -17, r: 40 }, { x: -120, z: -17, r: 22 }, { x: 0, z: 21, r: 9 }, { x: 10, z: -1, r: 8 }, { x: -12, z: 0, r: 6 }, { x: -24, z: 55, r: 26 }];
+    const keep = [...places.map(p => ({ ...p, r: 33 })), { x: 0, z: 70, r: 17 }, { x: 138, z: -17, r: 36 }, { x: -120, z: -17, r: 22 }, { x: 0, z: 21, r: 9 }, { x: 10, z: -1, r: 8 }, { x: -12, z: 0, r: 6 }, { x: -24, z: 55, r: 26 }];
     let seed = 1234567; const rnd = () => { seed = (seed * 1103515245 + 12345) >>> 0; return seed / 4294967296; };
     const free = (x, z) => Math.hypot(x, z) < 186 && !keep.some(k => Math.hypot(x - k.x, z - k.z) < k.r) && !(Math.abs(Math.atan2(z, x) - Math.PI / 2) < .45 && Math.hypot(x, z) > 160);
     const g = api.group(0, 0, 0), low = new T.IcosahedronGeometry(1, 0), tuft = new T.ConeGeometry(.16, 1, 4), rock = new T.DodecahedronGeometry(1, 0);

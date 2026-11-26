@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const KEY = 'little-explorer-adventures-v1';
-  const FARM = { x: 0, z: 70 }, RACE = { x: 120, z: -17 }, GARDEN = { x: -120, z: -17 };
+  const FARM = { x: 0, z: 70 }, RACE = { x: 138, z: -17 }, GARDEN = { x: -120, z: -17 };
   const ANIMALS = [
     { id: 'chick', baby: 'chick', mum: 'hen', sound: 'cheep cheep', colour: '#f2d65c', mumColour: '#f3eee0', kind: 'bird' },
     { id: 'duckling', baby: 'duckling', mum: 'duck', sound: 'quack quack', colour: '#f5e27a', mumColour: '#f7f3e6', kind: 'bird' },
@@ -61,7 +61,9 @@
     gp: { icon: '🏎️', text: () => 'Race in the Grand Prix', n: 1 },
     jump: { icon: '🐴', text: n => `Jump ${n} fences on the horse`, n: 3 },
     sea: { icon: '⛵', text: () => 'Sail to the lighthouse', n: 1 },
-    shell: { icon: '🐚', text: n => `Find ${n} seashells`, n: 4 }
+    shell: { icon: '🐚', text: n => `Find ${n} seashells`, n: 4 },
+    gem: { icon: '💎', text: n => `Find ${n} gems inside the wonders`, n: 5 },
+    quiz: { icon: '❓', text: () => 'Answer a wonder quiz', n: 1 }
   };
 
   let saved = {};
@@ -194,13 +196,13 @@
     });
 
     // Number race: ten standing rings around a meadow loop.
-    const track = api.group(RACE.x, 0, RACE.z); flat(track, '#d8e7b5', 0, 0, 34, .04);
+    const track = api.group(RACE.x, 0, RACE.z); flat(track, '#d8e7b5', 0, 0, 29, .04);
     api.sign('NUMBER RACE · DRIVE THROUGH IN ORDER', RACE.x, 13, RACE.z, 15); api.merge(track);
     for (let i = 0; i < 10; i++) {
-      const a = i / 10 * Math.PI * 2, x = RACE.x + Math.cos(a) * 22, z = RACE.z + Math.sin(a) * 28, spot = api.safePoint(x, z);
+      const a = i / 10 * Math.PI * 2, x = RACE.x + Math.cos(a) * 22, z = RACE.z + Math.sin(a) * 22, spot = api.safePoint(x, z);
       const g = api.group(spot.x, 0, spot.z), colour = ['#e58d7a', '#7cb6c3', '#9fcf86', '#c8a3dc', '#f0a8bf'][i % 5];
       const ring = api.mesh(g, new T.TorusGeometry(3, .32, 8, 32), colour, 0, 3.4, 0);
-      const tx = -Math.sin(a) * 22, tz = Math.cos(a) * 28; g.rotation.y = Math.atan2(tx, tz);
+      const tx = -Math.sin(a) * 22, tz = Math.cos(a) * 22; g.rotation.y = Math.atan2(tx, tz);
       for (const sd of [-1, 1]) api.segment(g, '#f4ecd2', [sd * 3, 0, 0], [sd * 3, 3.4, 0], .14);
       const label = labelSprite((ctx, n) => bubble(ctx, String(n), '#fffdf3', colour, String(n).length > 1 ? 62 : 78), 2.3); label.sprite.position.set(0, 7.5, 0); g.add(label.sprite);
       rings.push({ group: g, ring, label, x: spot.x, z: spot.z, colour });
@@ -409,6 +411,7 @@
       ['chest', '🧰', 'Treasure chests', `${s.opened.length} of ${CHESTS.length} found`],
       ['lost', '🔎', 'Find a lost baby', `${lost.filter(l => l.state === 'lost').length} still lost`],
       ...(window.Rides?.tiles() || []),
+      ...(window.WonderRooms?.tiles() || []),
       ['wardrobe', '👑', 'Wardrobe', 'Hats and buggy paint'],
       ...(s.trophies ? [['fireworks', '🎆', 'Fireworks show', `${s.trophies} trophies`]] : [])
     ];
@@ -448,7 +451,7 @@
     else if (a === 'hat') { s.hat = b.dataset.id; persist(); applyLook(); wardrobe(); api.speak(`${HATS.find(h => h.id === s.hat).label}! Looking great.`); }
     else if (a === 'paint') { s.paint = b.dataset.id; persist(); applyLook(); wardrobe(); api.speak(`${PAINTS.find(p => p.id === s.paint).label} buggy! Vroom!`); }
     else if (a === 'fireworks') { api.setMode('play'); celebrate(10); api.say('A fireworks show for a champion explorer! Look up in the sky!'); }
-    else if (!window.Rides?.guide(a)) guide(a);
+    else if (!window.Rides?.guide(a) && !window.WonderRooms?.guide(a)) guide(a);
   });
 
   window.Adventures = Object.freeze({

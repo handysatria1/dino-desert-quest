@@ -2,7 +2,23 @@
 
 ## [Play Wonder World](https://handysatria1.github.io/dino-desert-quest/world.html)
 
-A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
+A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between twelve landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
+
+### New: twelve wonders, richer models and busy rooms
+
+Five new wonders join the park, each with its own activity outside:
+
+| Wonder | Country | Activity |
+| --- | --- | --- |
+| 🐪 Pyramids of Giza | Egypt | Carry stones and build a little pyramid, big layers to small |
+| 🗼 Eiffel Tower | France | Light the tower one level at a time (1, 2, 3) |
+| 🦘 Sydney Opera House | Australia | Hop like a kangaroo onto four numbered stones |
+| 🔔 Borobudur | Indonesia | Find four bell-shaped stupas |
+| 🏙️ Petronas Towers | Malaysia | Add floors in pairs so the twin towers match; the sky bridge appears |
+
+The original seven have more detailed models: the Great Wall climbs over hills with battlements, Petra has its carved facade, the Taj Mahal has an onion dome, minarets and a reflecting pool, the Colosseum has three tiers with one worn side, Chichén Itzá has stairs on four sides, and Machu Picchu has thatched houses below its peak. As before, no statues or human figures are shown (Borobudur shows its stupas only).
+
+**Inside every wonder** there is now more to do: three exhibits to discover, **five hidden gems** to collect, a **quiz stand** with three spoken questions, and a **souvenir stall**. Finishing the room earns a souvenir (a toy camel, a tiny tower, a stone bell…) for the **souvenir shelf** on the adventure board.
 
 ### New: rides, the sea and a fresh look
 
@@ -39,7 +55,7 @@ Tap the 🌍 globe (or pause), then **🎪 Adventures**. Every adventure has a �
 | Letters | Starting sounds · Build a word (spell *cat*, *frog*, *star*…) |
 | Thinking | What comes next? · Pip’s colour memory · Odd one out |
 | Shapes | Shape detective (names, then counting sides) |
-| World | Wonder quiz (match the seven wonders to pictures and countries) |
+| World | Wonder quiz (match the wonders to pictures and countries) |
 
 Each game levels up as your child solves more (three levels). Every solved puzzle and every letter balloon earns a ⭐; each ten stars unlock a sticker in the 20-sticker book. Stars and letters save only in this browser.
 

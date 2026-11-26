@@ -4,7 +4,7 @@
   'use strict';
   const KEY = 'little-explorer-rides-v1';
   const STABLE = { x: -24, z: 64 }, HURDLES = [36, 46, 56, 66, 76].map(z => ({ x: -40, z })), MOOR = { x: 4, z: 250 }, DOCK_END = { x: 0, z: 250 };
-  const START_A = Math.PI * 1.1, LIGHT = { x: 72, z: 302 }, POD = { x: 34, z: 276 }, TRACK = { x: 120, z: -17, rx: 22, rz: 28 }, LAPS = 3;
+  const START_A = Math.PI * 1.1, LIGHT = { x: 72, z: 302 }, POD = { x: 34, z: 276 }, TRACK = { x: 138, z: -17, rx: 22, rz: 22 }, LAPS = 3;
   const RIVALS = [{ name: 'Fox', colour: '#e0703f', face: '#e88b4f', base: 14.6, fair: .97, pass: 1.04 }, { name: 'Panda', colour: '#4f8fc4', face: '#f4f1ea', base: 13.9, fair: .93, pass: 1 }, { name: 'Bunny', colour: '#9a6cc4', face: '#f1e6dc', base: 13.2, fair: .9, pass: .98 }];
   const SHELL_COLOURS = ['#f5d2c4', '#f3e6cf', '#e9b7a8', '#f7efe2', '#e6c49a', '#f0c9d6', '#e8dcc0', '#f2b9a0'];
 
