@@ -2,7 +2,48 @@
 
 ## [Play Wonder World](https://handysatria1.github.io/dino-desert-quest/world.html)
 
-A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between seven landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
+A gentle open-world educational park for ages 5–6. Drive a little buggy continuously between twelve landmark districts, or use big picture travel cards. A joystick, hop, one changing gold action button, and Pip’s spoken English guidance replace the old crowded play screen. No independent reading required; browser speech availability varies by device.
+
+### New: twelve wonders, richer models and busy rooms
+
+Five new wonders join the park, each with its own activity outside:
+
+| Wonder | Country | Activity |
+| --- | --- | --- |
+| 🐪 Pyramids of Giza | Egypt | Carry stones and build a little pyramid, big layers to small |
+| 🗼 Eiffel Tower | France | Light the tower one level at a time (1, 2, 3) |
+| 🦘 Sydney Opera House | Australia | Hop like a kangaroo onto four numbered stones |
+| 🔔 Borobudur | Indonesia | Find four bell-shaped stupas |
+| 🏙️ Petronas Towers | Malaysia | Add floors in pairs so the twin towers match; the sky bridge appears |
+
+The original seven have more detailed models: the Great Wall climbs over hills with battlements, Petra has its carved facade, the Taj Mahal has an onion dome, minarets and a reflecting pool, the Colosseum has three tiers with one worn side, Chichén Itzá has stairs on four sides, and Machu Picchu has thatched houses below its peak. As before, no statues or human figures are shown (Borobudur shows its stupas only).
+
+**Inside the pyramid** there is a pretend tomb corner: a painted sarcophagus whose lid opens to show a wrapped mummy, a mummy cat, and a wall of hieroglyphs (bird, sun, water and reed). The lid is decorated with patterns and a sun instead of a painted face, and the mummy is plain wrapped cloth.
+
+**Inside every wonder** there is now more to do: three exhibits to discover, **five hidden gems** to collect, a **quiz stand** with three spoken questions, and a **souvenir stall**. Finishing the room earns a souvenir (a toy camel, a tiny tower, a stone bell…) for the **souvenir shelf** on the adventure board.
+
+### New: rides, the sea and a fresh look
+
+- **Prettier world:** a soft sky with a sun, a moving sea with waves and foam, natural colour in the grass and paths, smoother shapes, and thousands of flowers, bushes, grass tufts and rocks.
+- **🏖️ Beach:** walk down the sand into the shallow water, past palm trees, umbrellas and a sandcastle. Eight seashells to find (they wash up again).
+- **⛵ Sailing:** walk to the end of the dock and tap **SAIL**. Sail around the island to the lighthouse, past a pod of jumping dolphins, then back to the dock.
+- **🐴 Horse riding:** tap **RIDE** next to the horse at the stable. It gallops; tap **HOP** to jump the five fences in order.
+- **🏎️ Grand Prix:** drive the buggy to the start line on the race track for a 3-2-1 countdown and three laps against Fox, Panda and Bunny. Gold, silver and bronze cups are kept. Rivals ease off when your child is ahead, so steady driving wins.
+
+All of these are on the 🎪 Adventures board, and count towards daily missions.
+
+### New: Pip’s adventure board
+
+Tap the 🌍 globe (or pause), then **🎪 Adventures**. Every adventure has a “take me there” button, and Pip speaks every step.
+
+| Adventure | What your child does | What they practise |
+| --- | --- | --- |
+| 🐣 Animal rescue | Find 10 lost baby animals around the park. Each follows in a line; lead them home to their mums at the farm. | Animal and baby names (lamb/sheep, foal/horse…), counting the line home |
+| 🏁 Number race | Drive through 10 numbered rings in order. Level 1 counts to 10, level 2 counts in twos, level 3 counts back from 10. Best times are kept. | Number order, skip counting, counting back |
+| 🥕 Garden | Fill the watering can at the pump, plant six crops, water them twice, watch them grow, and pick the harvest. | How plants grow, counting, plural words |
+| 🧰 Treasure chests | Six chests near the edge of the park, each marked with a shape. | Shape names; each chest unlocks a hat or buggy paint |
+| 👑 Wardrobe | Wear a party hat, crown, wizard hat, flower crown or space helmet; paint the buggy. | Rewards from chests, stars and trophies |
+| ✅ Daily missions | Three new missions every day (e.g. “Pick 6 things in the garden”). Finishing all three earns a trophy and a fireworks show. | A reason to come back and try everything |
 
 ### New: letter hunt, brain games and sticker book
 
@@ -16,7 +57,7 @@ A gentle open-world educational park for ages 5–6. Drive a little buggy contin
 | Letters | Starting sounds · Build a word (spell *cat*, *frog*, *star*…) |
 | Thinking | What comes next? · Pip’s colour memory · Odd one out |
 | Shapes | Shape detective (names, then counting sides) |
-| World | Wonder quiz (match the seven wonders to pictures and countries) |
+| World | Wonder quiz (match the wonders to pictures and countries) |
 
 Each game levels up as your child solves more (three levels). Every solved puzzle and every letter balloon earns a ⭐; each ten stars unlock a sticker in the 20-sticker book. Stars and letters save only in this browser.
 

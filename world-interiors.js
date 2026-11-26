@@ -29,7 +29,27 @@
     rio: { name: 'Inside the forest lodge', welcome: 'Welcome to our pretend forest visitor lodge! This is an imaginary park building, not inside the statue. Look at the mountain view, leaves and bird nests.', things: [
       ['⛰️', 'A mountain window', 'Corcovado is a mountain in Rio de Janeiro. From high viewpoints, people can see the city, forest and sea.'],
       ['🍃', 'Forest leaf shapes', 'Forest plants have many leaf shapes and sizes. Leaves help plants use sunlight to grow.'],
-      ['🪺', 'A home for birds', 'Trees give birds places to rest and build nests. We can help wildlife by caring for forests and watching quietly.'] ] }
+      ['🪺', 'A home for birds', 'Trees give birds places to rest and build nests. We can help wildlife by caring for forests and watching quietly.'] ] },
+    giza: { name: 'Inside the desert discovery room', welcome: 'Welcome to our pretend pyramid room! Explore giant stone blocks, the River Nile, desert camels, picture writing, and two sleepy mummies in painted boxes.', things: [
+      ['🧱', 'Huge stone blocks', 'The pyramids are made of huge stone blocks, stacked layer on layer. Some blocks are heavier than a car!'],
+      ['🌊', 'The River Nile', 'The River Nile flows through Egypt. Boats carried stones and food along the river. Tap again to float our little boat.'],
+      ['🐪', 'Desert camels', 'Camels can walk a long way in hot, dry deserts. Their humps store fat, which gives them energy.'] ] },
+    eiffel: { name: 'Inside the iron workshop', welcome: 'Welcome to our pretend iron workshop! Explore metal pieces, ride a little model lift and see what people eat in Paris.', things: [
+      ['🔩', 'Iron and rivets', 'The Eiffel Tower is made of thousands of iron pieces joined with little metal pins called rivets.'],
+      ['🛗', 'Going up!', 'Lifts carry visitors up the tower. Tap again to send our little lift up and down.'],
+      ['🥐', 'Paris bakery', 'In Paris, people enjoy fresh bread from bakeries, like long baguettes and flaky croissants.'] ] },
+    opera: { name: 'Inside the harbour room', welcome: 'Welcome to our pretend harbour room! Explore the shell roofs, the ferry boats and the animals of Australia.', things: [
+      ['🐚', 'Shell-shaped roofs', 'The Opera House roofs are made of curved pieces, like slices of a ball. Together they look like shells or sails.'],
+      ['⛴️', 'Harbour ferries', 'Ferry boats carry people across Sydney Harbour. Tap again to send our ferry across the water.'],
+      ['🐨', 'Australian animals', 'Australia has animals found nowhere else in the wild, like kangaroos, koalas and wombats.'] ] },
+    borobudur: { name: 'Inside the stone gallery', welcome: 'Welcome to our pretend stone gallery! Explore a bell-shaped stupa, carved stone pictures and the volcanoes of Java.', things: [
+      ['🔔', 'A bell-shaped stupa', 'A stupa at Borobudur is shaped like a bell, with little diamond-shaped holes like a lattice.'],
+      ['🪨', 'Carved stone pictures', 'Borobudur has many carved stone panels along its terraces. They show plants, animals, boats and daily life long ago.'],
+      ['🌋', 'Volcanoes and rice fields', 'Borobudur is surrounded by volcanoes and green rice fields on the island of Java. Tap again to see our model volcano puff.'] ] },
+    petronas: { name: 'Inside the sky lobby', welcome: 'Welcome to our pretend sky lobby! Explore the sky bridge, a star-shaped floor plan and shiny steel and glass.', things: [
+      ['🌉', 'The sky bridge', 'A sky bridge joins the two towers high in the air. Tap again to slide our little model bridge into place.'],
+      ['⭐', 'Star-shaped floors', 'From above, each tower floor is shaped like an eight-pointed star. Count the points: one, two, three, four, five, six, seven, eight!'],
+      ['🪟', 'Steel and glass', 'The towers are made of steel and glass that shine in the sunshine.'] ] }
   };
   function build(api, place) {
     const { T, box, ball, cylinder, segment, arch, group } = api;
@@ -37,7 +57,7 @@
     scene.add(new T.HemisphereLight('#fff8df', '#9caa8a', 2.6));
     const light = new T.DirectionalLight('#fff1d5', 2.5); light.position.set(-10, 24, 18); scene.add(light);
     const shell = group(0, 0, 0, scene), exhibits = group(0, 0, 0, scene), blocks = [];
-    const sand = place.id === 'petra' ? '#d5a082' : place.id === 'taj' ? '#f5ead1' : place.id === 'rio' ? '#c9b484' : '#c9bd98';
+    const sand = { petra: '#d5a082', taj: '#f5ead1', rio: '#c9b484', giza: '#e4cc96', eiffel: '#cdbfa6', opera: '#ece7dc', borobudur: '#a9a394', petronas: '#d5dade' }[place.id] || '#c9bd98';
     box(shell, '#a9bf97', 0, -.7, 0, 180, .5, 180);
     box(shell, '#e4d6b2', 0, -.2, 0, 25, .5, 22);
     // A dollhouse cutaway leaves the near walls and roof open so nothing hides the child.
@@ -111,6 +131,76 @@
       for (let i = 0; i < 3; i++) { box(b, '#b7b38c', 0, 1 + i * .5, -i * .6, 3.5 - i * .5, .5 + i, .7); box(b, '#8dac72', 0, 1.3 + i * 1, -i * .6, 3.5 - i * .5, .08, .7); }
       cylinder(c, '#b79564', 0, 1.2, 0, 1.3, 1, 1, 12);
       for (let i = 0; i < 7; i++) ball(c, i % 2 ? '#d4b261' : '#b99772', Math.sin(i * 2.4) * .8, 1.8, Math.cos(i * 2.4) * .65, .3, i % 2 ? .6 : .25, .25);
+    } else if (place.id === 'giza') {
+      for (let row = 0; row < 3; row++) for (let i = 0; i < 3 - row; i++) box(a, ['#d8bb80', '#cfae72'][(i + row) % 2], -1.1 + i * 1.1 + row * .55, 1.1 + row * .9, 0, 1, .9, 1.4);
+      box(b, '#e4cc96', 0, .8, 0, 3.4, .2, 2.2); box(b, '#6fb3c7', 0, .92, 0, 3.4, .06, .8);
+      const boat = group(-1.2, 1, 0, b); box(boat, '#a07a4c', 0, 0, 0, 1, .2, .4); segment(boat, '#7a5a35', [0, 0, 0], [0, 1, 0], .03); box(boat, '#f4ecd2', .15, .6, 0, .3, .6, .02);
+      hotspots[1].animate = on => { boat.position.x = on ? 1.2 : -1.2; };
+      const camel = group(0, .7, 0, c), col = '#c89a62'; ball(camel, col, 0, 1, 0, .5, .4, .8); ball(camel, col, 0, 1.45, 0, .32, .35, .35); segment(camel, col, [0, 1.1, .6], [0, 1.7, 1], .14); ball(camel, col, 0, 1.75, 1.15, .18, .16, .3);
+      for (const x of [-.25, .25]) for (const z of [-.5, .5]) segment(camel, col, [x, .8, z], [x, 0, z], .07);
+      for (const x of [-8, 8]) { const pyr = new T.Mesh(new T.ConeGeometry(3.5, 5, 4), new T.MeshStandardMaterial({ color: '#d8bb80' })); pyr.position.set(x, 2.5, -9.2); pyr.rotation.y = Math.PI / 4; shell.add(pyr); }
+      // A pretend tomb corner: a painted sarcophagus that opens, a mummy cat and a hieroglyph wall.
+      // Patterns and a sun disk decorate the lid instead of a painted face; the mummy is plain wrapped cloth.
+      const gold = '#d9b45b', blue = '#3f6fa8', cloth = '#ece3cb', band = '#d6caa9';
+      const tomb = group(-4.2, 0, 1.2, exhibits); blocks.push({ x: -4.2, z: 1.2, w: .8, d: 1.6 });
+      box(tomb, '#a88b5a', 0, .25, 0, 1.6, .5, 3); box(tomb, gold, 0, .8, 0, 1.3, .6, 2.7); box(tomb, '#4a3a28', 0, 1.08, 0, 1.05, .05, 2.4);
+      for (const z of [-1.1, -.4, .3, 1]) box(tomb, blue, 0, .8, z, 1.32, .62, .12);
+      const mummy = group(0, 1.15, 0, tomb); ball(mummy, cloth, 0, 0, .15, .42, .26, 1.05); ball(mummy, cloth, 0, .04, -1.05, .3, .26, .3); ball(mummy, cloth, 0, .05, 1.15, .2, .16, .18);
+      for (let i = 0; i < 9; i++) { const z = -1.15 + i * .28; box(mummy, band, 0, .02, z, .78 - Math.abs(z) * .25, .5, .04).rotation.x = .15; }
+      const lid = group(0, 1.12, 0, tomb); box(lid, gold, 0, .1, 0, 1.32, .2, 2.72);
+      for (const z of [-.9, -.2, .5]) box(lid, blue, 0, .21, z, 1.1, .03, .18); for (const z of [-.55, .15, .85]) box(lid, '#c0504d', 0, .21, z, 1.1, .03, .1);
+      ball(lid, '#e05b47', 0, .24, -1.05, .28, .04, .28); for (const sx of [-1, 1]) { const wing = box(lid, '#4f8fc4', sx * .4, .23, -1.05, .45, .03, .16); wing.rotation.y = sx * .25; }
+      const cat = group(4.2, 0, 1.2, exhibits); blocks.push({ x: 4.2, z: 1.2, w: .7, d: .7 });
+      box(cat, '#a88b5a', 0, .3, 0, 1.2, .6, 1.2); ball(cat, cloth, 0, 1.25, 0, .38, .7, .34); ball(cat, cloth, 0, 2.05, .02, .3, .28, .28);
+      for (const sx of [-1, 1]) { const ear = new T.Mesh(new T.ConeGeometry(.1, .3, 4), new T.MeshStandardMaterial({ color: cloth })); ear.position.set(sx * .15, 2.36, 0); cat.add(ear); }
+      for (let i = 0; i < 6; i++) box(cat, band, 0, .75 + i * .22, 0, .66 - Math.abs(i - 2.5) * .06, .04, .58).rotation.z = (i % 2 ? .12 : -.12);
+      ball(cat, '#4f8fc4', 0, 1.65, .3, .12, .1, .06);
+      const glyph = document.createElement('canvas'); glyph.width = 512; glyph.height = 256; const g2 = glyph.getContext('2d');
+      g2.fillStyle = '#e8d3a0'; g2.fillRect(0, 0, 512, 256); g2.fillStyle = '#3f6fa8'; g2.strokeStyle = '#3f6fa8'; g2.lineWidth = 9;
+      g2.beginPath(); g2.ellipse(80, 130, 34, 22, 0, 0, Math.PI * 2); g2.fill(); g2.beginPath(); g2.arc(118, 100, 14, 0, Math.PI * 2); g2.fill(); g2.beginPath(); g2.moveTo(130, 98); g2.lineTo(152, 104); g2.lineTo(130, 108); g2.fill(); g2.fillRect(66, 150, 6, 40); g2.fillRect(88, 150, 6, 40);
+      g2.fillStyle = '#c0504d'; g2.beginPath(); g2.arc(230, 128, 36, 0, Math.PI * 2); g2.fill();
+      g2.beginPath(); for (let k = 0; k < 3; k++) { g2.moveTo(300, 90 + k * 34); for (let x = 300; x <= 400; x += 20) g2.lineTo(x + 10, 90 + k * 34 + (x % 40 ? -10 : 10)); } g2.stroke();
+      g2.fillStyle = '#5ea36a'; g2.fillRect(452, 70, 10, 120); g2.beginPath(); g2.ellipse(457, 64, 22, 14, 0, 0, Math.PI * 2); g2.fill();
+      const tex = new T.CanvasTexture(glyph); tex.colorSpace = T.SRGBColorSpace;
+      const tablet = new T.Mesh(new T.PlaneGeometry(6, 3), new T.MeshStandardMaterial({ map: tex, roughness: .9 })); tablet.position.set(0, 4.4, -9.6); shell.add(tablet);
+      const facts = [
+        { x: -4.2, z: 3.4, icon: '⚱️', text: 'A painted sarcophagus', fact: 'This is a sarcophagus, a big painted box. Long ago in Egypt, special people were wrapped very carefully in cloth bandages and laid inside. That is called a mummy. Ours is a pretend one. Tap again to close the lid gently.', model: tomb, changed: false },
+        { x: 4.2, z: 3.4, icon: '🐈', text: 'A mummy cat', fact: 'The ancient Egyptians loved cats! Some cats were wrapped in cloth like little mummies, too. Our pretend cat mummy sits on a stone box.', model: cat, changed: false },
+        { x: -3.8, z: -1.8, icon: '📜', text: 'Picture writing', fact: 'The ancient Egyptians wrote with picture symbols called hieroglyphs. Look up at our wall! Can you spot the bird, the red sun, the wavy water and the reed?', model: tablet, changed: false }
+      ];
+      facts[0].animate = on => { lid.position.set(on ? 1.55 : 0, on ? .7 : 1.12, 0); lid.rotation.z = on ? -1.3 : 0; };
+      hotspots.push(...facts);
+    } else if (place.id === 'eiffel') {
+      for (let i = 0; i < 4; i++) { const beam = box(a, '#8b6f4e', -1.2 + i * .8, 1.6, 0, .25, 1.8, .25); beam.rotation.z = i % 2 ? .4 : -.4; for (let k = 0; k < 3; k++) ball(a, '#5d5a52', -1.2 + i * .8, 1 + k * .5, .15, .08); }
+      for (const x of [-.9, .9]) segment(b, '#8b6f4e', [x, .7, 0], [x, 4.4, 0], .08);
+      const lift = box(b, '#d9b45b', 0, 1.2, 0, 1.4, .9, 1); hotspots[1].animate = on => { lift.position.y = on ? 3.6 : 1.2; };
+      box(c, '#a87a4f', 0, .9, 0, 3.2, .3, 1.8); const loaf = ball(c, '#d9a45e', -.6, 1.2, 0, 1.1, .22, .25); loaf.rotation.y = .3;
+      for (const x of [.6, 1.2]) { const cr = new T.Mesh(new T.TorusGeometry(.28, .14, 6, 10, Math.PI), new T.MeshStandardMaterial({ color: '#e0a85a' })); cr.position.set(x, 1.15, .2); cr.rotation.x = -Math.PI / 2; c.add(cr); }
+      for (const x of [-8, 0, 8]) windowView(group(x, 0, -9.3, shell), false);
+    } else if (place.id === 'opera') {
+      const white = new T.MeshStandardMaterial({ color: '#fbf8f0', side: T.DoubleSide });
+      for (let i = 0; i < 3; i++) { const sh = new T.Mesh(new T.SphereGeometry(1.3 - i * .3, 16, 8, 0, Math.PI, 0, Math.PI / 2), white); sh.position.set(-1 + i * 1, .7, 0); sh.rotation.x = -.6; a.add(sh); }
+      box(b, '#6fb3c7', 0, .8, 0, 3.4, .12, 2.2);
+      const ferry = group(-1.2, 1, 0, b); box(ferry, '#2f6d48', 0, 0, 0, 1.1, .3, .5); box(ferry, '#f4e7b8', 0, .3, 0, .8, .3, .4);
+      hotspots[1].animate = on => { ferry.position.x = on ? 1.2 : -1.2; };
+      const koala = group(0, 1, 0, c); ball(koala, '#9aa0a3', 0, .6, 0, .45, .55, .4); ball(koala, '#9aa0a3', 0, 1.3, 0, .38); for (const x of [-.32, .32]) ball(koala, '#c2c6c8', x, 1.6, 0, .18, .18, .08); ball(koala, '#3a3a3a', 0, 1.25, .35, .1, .12, .08);
+      cylinder(c, '#8a6a45', .7, 1.6, -.2, .12, .15, 3, 8);
+      for (const x of [-8, 0, 8]) windowView(group(x, 0, -9.3, shell), false);
+    } else if (place.id === 'borobudur') {
+      cylinder(a, '#8f897c', 0, .85, 0, .9, 1, .3, 12);
+      const bell = new T.Mesh(new T.LatheGeometry([[.9, 0], [1, .5], [.9, 1], [.5, 1.4], [.15, 1.6], [0, 1.62]].map(([r, h]) => new T.Vector2(r, h)), 16), new T.MeshStandardMaterial({ color: '#a8a294', flatShading: true })); bell.position.y = 1; a.add(bell);
+      box(b, '#9a9486', 0, 2, -.2, 3.4, 2.4, .3);
+      for (let i = 0; i < 3; i++) { ball(b, '#7d9a6a', -1 + i, 2.3, -.02, .3, .4, .05); box(b, '#857f72', -1 + i, 1.4, -.02, .5, .15, .05); }
+      const volcano = cylinder(c, '#7d8f63', 0, 1.5, 0, .3, 1.4, 1.8, 10); box(c, '#9bc06f', 0, .78, 0, 3.4, .1, 2.2);
+      const puff = ball(c, '#e9ecec', 0, 2.7, 0, .35); puff.visible = false; hotspots[2].animate = on => { puff.visible = on; puff.scale.setScalar(on ? 1.6 : 1); }; void volcano;
+      for (const x of [-8, 0, 8]) windowView(group(x, 0, -9.3, shell), true);
+    } else if (place.id === 'petronas') {
+      for (const x of [-1.1, 1.1]) for (let i = 0; i < 6; i++) cylinder(a, i % 2 ? '#c9ced3' : '#dde1e5', x, .95 + i * .5, 0, .45 - (i > 3 ? (i - 3) * .1 : 0), .45, .5, 8);
+      const span = box(a, '#9aa2a9', 0, 2.3, 0, .2, .2, .5); hotspots[0].animate = on => { span.scale.x = on ? 9 : 1; };
+      const star = new T.Shape(); for (let i = 0; i < 16; i++) { const r = i % 2 ? .75 : 1.3, ang = i / 16 * Math.PI * 2; star[i ? 'lineTo' : 'moveTo'](Math.cos(ang) * r, Math.sin(ang) * r); }
+      const plan = new T.Mesh(new T.ExtrudeGeometry(star, { depth: .25, bevelEnabled: false }), new T.MeshStandardMaterial({ color: '#c9ced3' })); plan.rotation.x = -Math.PI / 2; plan.position.y = .72; b.add(plan);
+      box(c, '#9fb2bf', 0, 1.9, 0, 2.8, 2.2, .2); for (const x of [-.7, 0, .7]) box(c, '#c9ced3', x, 1.9, .12, .08, 2.2, .05);
+      for (const x of [-8, 0, 8]) windowView(group(x, 0, -9.3, shell), false);
     } else {
       windowView(a, true);
       for (let i = 0; i < 5; i++) { const x = Math.sin(i * 2.4) * 1.3, y = 1.5 + i * .45; segment(b, '#9e865d', [0, .7, 0], [x, y, 0], .07); const leaf = ball(b, i % 2 ? '#88ac79' : '#aac184', x, y, 0, .5, .18, .25); leaf.rotation.z = i * .5; }
