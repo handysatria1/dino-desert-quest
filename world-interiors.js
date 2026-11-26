@@ -30,7 +30,7 @@
       ['⛰️', 'A mountain window', 'Corcovado is a mountain in Rio de Janeiro. From high viewpoints, people can see the city, forest and sea.'],
       ['🍃', 'Forest leaf shapes', 'Forest plants have many leaf shapes and sizes. Leaves help plants use sunlight to grow.'],
       ['🪺', 'A home for birds', 'Trees give birds places to rest and build nests. We can help wildlife by caring for forests and watching quietly.'] ] },
-    giza: { name: 'Inside the desert discovery room', welcome: 'Welcome to our pretend desert discovery room! Explore giant stone blocks, a model of the River Nile and the camels of the desert.', things: [
+    giza: { name: 'Inside the desert discovery room', welcome: 'Welcome to our pretend pyramid room! Explore giant stone blocks, the River Nile, desert camels, picture writing, and two sleepy mummies in painted boxes.', things: [
       ['🧱', 'Huge stone blocks', 'The pyramids are made of huge stone blocks, stacked layer on layer. Some blocks are heavier than a car!'],
       ['🌊', 'The River Nile', 'The River Nile flows through Egypt. Boats carried stones and food along the river. Tap again to float our little boat.'],
       ['🐪', 'Desert camels', 'Camels can walk a long way in hot, dry deserts. Their humps store fat, which gives them energy.'] ] },
@@ -139,6 +139,37 @@
       const camel = group(0, .7, 0, c), col = '#c89a62'; ball(camel, col, 0, 1, 0, .5, .4, .8); ball(camel, col, 0, 1.45, 0, .32, .35, .35); segment(camel, col, [0, 1.1, .6], [0, 1.7, 1], .14); ball(camel, col, 0, 1.75, 1.15, .18, .16, .3);
       for (const x of [-.25, .25]) for (const z of [-.5, .5]) segment(camel, col, [x, .8, z], [x, 0, z], .07);
       for (const x of [-8, 8]) { const pyr = new T.Mesh(new T.ConeGeometry(3.5, 5, 4), new T.MeshStandardMaterial({ color: '#d8bb80' })); pyr.position.set(x, 2.5, -9.2); pyr.rotation.y = Math.PI / 4; shell.add(pyr); }
+      // A pretend tomb corner: a painted sarcophagus that opens, a mummy cat and a hieroglyph wall.
+      // Patterns and a sun disk decorate the lid instead of a painted face; the mummy is plain wrapped cloth.
+      const gold = '#d9b45b', blue = '#3f6fa8', cloth = '#ece3cb', band = '#d6caa9';
+      const tomb = group(-4.2, 0, 1.2, exhibits); blocks.push({ x: -4.2, z: 1.2, w: .8, d: 1.6 });
+      box(tomb, '#a88b5a', 0, .25, 0, 1.6, .5, 3); box(tomb, gold, 0, .8, 0, 1.3, .6, 2.7); box(tomb, '#4a3a28', 0, 1.08, 0, 1.05, .05, 2.4);
+      for (const z of [-1.1, -.4, .3, 1]) box(tomb, blue, 0, .8, z, 1.32, .62, .12);
+      const mummy = group(0, 1.15, 0, tomb); ball(mummy, cloth, 0, 0, .15, .42, .26, 1.05); ball(mummy, cloth, 0, .04, -1.05, .3, .26, .3); ball(mummy, cloth, 0, .05, 1.15, .2, .16, .18);
+      for (let i = 0; i < 9; i++) { const z = -1.15 + i * .28; box(mummy, band, 0, .02, z, .78 - Math.abs(z) * .25, .5, .04).rotation.x = .15; }
+      const lid = group(0, 1.12, 0, tomb); box(lid, gold, 0, .1, 0, 1.32, .2, 2.72);
+      for (const z of [-.9, -.2, .5]) box(lid, blue, 0, .21, z, 1.1, .03, .18); for (const z of [-.55, .15, .85]) box(lid, '#c0504d', 0, .21, z, 1.1, .03, .1);
+      ball(lid, '#e05b47', 0, .24, -1.05, .28, .04, .28); for (const sx of [-1, 1]) { const wing = box(lid, '#4f8fc4', sx * .4, .23, -1.05, .45, .03, .16); wing.rotation.y = sx * .25; }
+      const cat = group(4.2, 0, 1.2, exhibits); blocks.push({ x: 4.2, z: 1.2, w: .7, d: .7 });
+      box(cat, '#a88b5a', 0, .3, 0, 1.2, .6, 1.2); ball(cat, cloth, 0, 1.25, 0, .38, .7, .34); ball(cat, cloth, 0, 2.05, .02, .3, .28, .28);
+      for (const sx of [-1, 1]) { const ear = new T.Mesh(new T.ConeGeometry(.1, .3, 4), new T.MeshStandardMaterial({ color: cloth })); ear.position.set(sx * .15, 2.36, 0); cat.add(ear); }
+      for (let i = 0; i < 6; i++) box(cat, band, 0, .75 + i * .22, 0, .66 - Math.abs(i - 2.5) * .06, .04, .58).rotation.z = (i % 2 ? .12 : -.12);
+      ball(cat, '#4f8fc4', 0, 1.65, .3, .12, .1, .06);
+      const glyph = document.createElement('canvas'); glyph.width = 512; glyph.height = 256; const g2 = glyph.getContext('2d');
+      g2.fillStyle = '#e8d3a0'; g2.fillRect(0, 0, 512, 256); g2.fillStyle = '#3f6fa8'; g2.strokeStyle = '#3f6fa8'; g2.lineWidth = 9;
+      g2.beginPath(); g2.ellipse(80, 130, 34, 22, 0, 0, Math.PI * 2); g2.fill(); g2.beginPath(); g2.arc(118, 100, 14, 0, Math.PI * 2); g2.fill(); g2.beginPath(); g2.moveTo(130, 98); g2.lineTo(152, 104); g2.lineTo(130, 108); g2.fill(); g2.fillRect(66, 150, 6, 40); g2.fillRect(88, 150, 6, 40);
+      g2.fillStyle = '#c0504d'; g2.beginPath(); g2.arc(230, 128, 36, 0, Math.PI * 2); g2.fill();
+      g2.beginPath(); for (let k = 0; k < 3; k++) { g2.moveTo(300, 90 + k * 34); for (let x = 300; x <= 400; x += 20) g2.lineTo(x + 10, 90 + k * 34 + (x % 40 ? -10 : 10)); } g2.stroke();
+      g2.fillStyle = '#5ea36a'; g2.fillRect(452, 70, 10, 120); g2.beginPath(); g2.ellipse(457, 64, 22, 14, 0, 0, Math.PI * 2); g2.fill();
+      const tex = new T.CanvasTexture(glyph); tex.colorSpace = T.SRGBColorSpace;
+      const tablet = new T.Mesh(new T.PlaneGeometry(6, 3), new T.MeshStandardMaterial({ map: tex, roughness: .9 })); tablet.position.set(0, 4.4, -9.6); shell.add(tablet);
+      const facts = [
+        { x: -4.2, z: 3.4, icon: '⚱️', text: 'A painted sarcophagus', fact: 'This is a sarcophagus, a big painted box. Long ago in Egypt, special people were wrapped very carefully in cloth bandages and laid inside. That is called a mummy. Ours is a pretend one. Tap again to close the lid gently.', model: tomb, changed: false },
+        { x: 4.2, z: 3.4, icon: '🐈', text: 'A mummy cat', fact: 'The ancient Egyptians loved cats! Some cats were wrapped in cloth like little mummies, too. Our pretend cat mummy sits on a stone box.', model: cat, changed: false },
+        { x: -3.8, z: -1.8, icon: '📜', text: 'Picture writing', fact: 'The ancient Egyptians wrote with picture symbols called hieroglyphs. Look up at our wall! Can you spot the bird, the red sun, the wavy water and the reed?', model: tablet, changed: false }
+      ];
+      facts[0].animate = on => { lid.position.set(on ? 1.55 : 0, on ? .7 : 1.12, 0); lid.rotation.z = on ? -1.3 : 0; };
+      hotspots.push(...facts);
     } else if (place.id === 'eiffel') {
       for (let i = 0; i < 4; i++) { const beam = box(a, '#8b6f4e', -1.2 + i * .8, 1.6, 0, .25, 1.8, .25); beam.rotation.z = i % 2 ? .4 : -.4; for (let k = 0; k < 3; k++) ball(a, '#5d5a52', -1.2 + i * .8, 1 + k * .5, .15, .08); }
       for (const x of [-.9, .9]) segment(b, '#8b6f4e', [x, .7, 0], [x, 4.4, 0], .08);

@@ -18,6 +18,8 @@ Five new wonders join the park, each with its own activity outside:
 
 The original seven have more detailed models: the Great Wall climbs over hills with battlements, Petra has its carved facade, the Taj Mahal has an onion dome, minarets and a reflecting pool, the Colosseum has three tiers with one worn side, Chichén Itzá has stairs on four sides, and Machu Picchu has thatched houses below its peak. As before, no statues or human figures are shown (Borobudur shows its stupas only).
 
+**Inside the pyramid** there is a pretend tomb corner: a painted sarcophagus whose lid opens to show a wrapped mummy, a mummy cat, and a wall of hieroglyphs (bird, sun, water and reed). The lid is decorated with patterns and a sun instead of a painted face, and the mummy is plain wrapped cloth.
+
 **Inside every wonder** there is now more to do: three exhibits to discover, **five hidden gems** to collect, a **quiz stand** with three spoken questions, and a **souvenir stall**. Finishing the room earns a souvenir (a toy camel, a tiny tower, a stone bell…) for the **souvenir shelf** on the adventure board.
 
 ### New: rides, the sea and a fresh look

@@ -5,7 +5,7 @@
   const KEY = 'little-explorer-rooms-v1';
   const QUIZ = {
     wall: [['Which country is the Great Wall in?', 'China', 'Peru', 'Italy'], ['What is the Great Wall made of?', 'Stone and bricks', 'Ice', 'Paper'], ['Is the Great Wall straight or bendy?', 'Bendy, over the hills', 'Perfectly straight', 'A round circle']],
-    giza: [['Which country are the pyramids in?', 'Egypt', 'France', 'Brazil'], ['What shape are the sides of a pyramid?', 'Triangles', 'Circles', 'Stars'], ['Which animal walks across the desert?', 'A camel', 'A penguin', 'A polar bear']],
+    giza: [['Which country are the pyramids in?', 'Egypt', 'France', 'Brazil'], ['What shape are the sides of a pyramid?', 'Triangles', 'Circles', 'Stars'], ['What were mummies wrapped in?', 'Cloth bandages', 'Paper', 'Leaves'], ['Which animal walks across the desert?', 'A camel', 'A penguin', 'A polar bear']],
     petra: [['Which country is Petra in?', 'Jordan', 'Mexico', 'Australia'], ['What colour is the rock at Petra?', 'Pink sandstone', 'Blue ice', 'Green grass'], ['Is Petra in a wet place or a dry place?', 'A dry place', 'A snowy place', 'Under the sea']],
     eiffel: [['Which country is the Eiffel Tower in?', 'France', 'India', 'Peru'], ['What is the Eiffel Tower made of?', 'Iron', 'Chocolate', 'Wool'], ['How many levels can visitors stand on?', 'Three', 'Ten', 'One']],
     taj: [['Which country is the Taj Mahal in?', 'India', 'Egypt', 'Brazil'], ['When both sides match, it is called…', 'Symmetry', 'A shadow', 'A puddle'], ['What is the big round roof called?', 'A dome', 'A tent', 'A slide']],
@@ -94,10 +94,10 @@
       setTimeout(() => {
         if (!quiz) return; quiz.busy = false; quiz.i++;
         if (quiz.i < quiz.qs.length) return renderQuiz();
-        const { h, room } = quiz; quiz = null; h.seen = true;
+        const { h, room, qs: asked } = quiz; quiz = null; h.seen = true;
         if (!s.quizzes.includes(room.placeId)) { s.quizzes.push(room.placeId); persist(); }
         emit('quiz'); api.setMode('play'); api.updateHUD();
-        api.say(complete(room) && !s.souvenirs.includes(room.placeId) ? 'Quiz complete! Three right answers. Now visit the souvenir stall for a present!' : `Quiz complete! Three right answers. ${remaining(room).length ? 'Still to do: ' + remaining(room).join(', ') + '.' : ''}`);
+        api.say(complete(room) && !s.souvenirs.includes(room.placeId) ? `Quiz complete! ${asked.length} right answers. Now visit the souvenir stall for a present!` : `Quiz complete! ${asked.length} right answers. ${remaining(room).length ? 'Still to do: ' + remaining(room).join(', ') + '.' : ''}`);
       }, 1700);
     } else { btn?.classList.add('wrong'); if (fb) fb.textContent = 'Almost! Try another one.'; api.speak('Almost! Try another one.'); setTimeout(() => btn?.classList.remove('wrong'), 900); }
   }
